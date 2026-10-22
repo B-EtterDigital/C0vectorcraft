@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>C0vector</title>
+  <link data-trunk rel="rust" href="../../apps/vectorcraft-web/Cargo.toml" data-bin="vectorcraft-web" data-cargo-features="page-control" data-wasm-opt="z" data-weak-refs />
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+    #vectorcraft_canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+    #vectorcraft_loading { position: absolute; inset: 0; display: grid; place-content: center; padding: 24px; font: 14px system-ui; color-scheme: light dark; color: CanvasText; background: Canvas; }
+    #vectorcraft_loading:empty { display: none; }
+  </style>
+  <script>
+    window.__c0hostRequest = (json) => window.__vectorcraftControl(json);
+  </script>
+</head>
+<body>
+  <canvas id="vectorcraft_canvas"></canvas>
+  <div id="vectorcraft_loading"></div>
+</body>
+</html>

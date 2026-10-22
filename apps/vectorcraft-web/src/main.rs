@@ -22,6 +22,8 @@ mod api;
 mod fonts;
 #[cfg(target_arch = "wasm32")]
 mod locks;
+#[cfg(feature = "page-control")]
+mod page_control;
 #[cfg(any(target_arch = "wasm32", test))]
 mod pencil;
 #[cfg(any(target_arch = "wasm32", test))]

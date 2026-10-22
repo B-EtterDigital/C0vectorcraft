@@ -1,0 +1,10 @@
+[build]
+target = "index.html"
+dist = "../../dist/c0host"
+public_url = "./"
+filehash = true
+
+[[hooks]]
+stage = "post_build"
+command = "cargo"
+command_arguments = ["xtask", "web-fonts"]
