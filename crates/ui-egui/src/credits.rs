@@ -281,6 +281,9 @@ pub fn contributors_ui(app: &mut VectorcraftApp, ui: &mut egui::Ui) {
 }
 
 fn link(app: &mut VectorcraftApp, ui: &mut egui::Ui, c: &Contributor, names: NameMode) -> egui::Response {
+    if !app.c0.chrome.community_links {
+        return ui.label(c.name(names)).on_hover_text(c.summary());
+    }
     let url = format!("https://github.com/{}", c.login);
     let r = ui.add(egui::Link::new(c.name(names))).on_hover_text(c.summary());
     if r.clicked() {

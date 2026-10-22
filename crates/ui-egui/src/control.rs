@@ -131,6 +131,7 @@ pub fn all_commands(app: &VectorcraftApp) -> Value {
     for (id, label, sc, params) in crate::menus::UI_COMMANDS {
         v.push(json!({"id": id, "label": label, "shortcut": sc, "params": params, "enabled": crate::menus::enabled(app, id), "ui": true}));
     }
+    v.retain(|entry| entry.get("id").and_then(Value::as_str).is_none_or(|id| crate::c0_host::allow(app, id).is_ok()));
     Value::Array(v)
 }
 
@@ -198,6 +199,7 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context, req: &ControlReques
     let p = &req.params;
     let s = |k: &str| p.get(k).and_then(Value::as_str);
     match req.method.as_str() {
+        id if id.starts_with("c0.") => wrap(crate::c0_host::handle(app, ctx, id, p)),
         "engine.execute" | "ui.menu.invoke" | "command" => {
             let Some(id) = s("command").or(s("id")) else { return err("missing `command`") };
             let params = p.get("params").cloned().unwrap_or(json!({}));

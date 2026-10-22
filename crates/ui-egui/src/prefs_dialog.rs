@@ -131,11 +131,7 @@ pub fn apply_runtime(app: &mut VectorcraftApp, ctx: &egui::Context) {
         ctx.global_style_mut(|s| s.interaction.tooltip_delay = delay);
         crate::scrub::set_enabled(ctx, want.scrub);
         crate::widgets::set_bare_numbers_are_points(ctx, want.bare_points);
-        if let Some(c) = want.canvas {
-            let mut t = Tokens::get(ctx);
-            t.pasteboard = c;
-            ctx.data_mut(|d| d.insert_temp(egui::Id::NULL, t));
-        }
+        theme::host::canvas_preference(ctx, want.canvas);
         if prev.is_some_and(|pr| pr.threads != want.threads) {
             vectorcraft_render::set_default_threads(u16::try_from(want.threads).ok());
             app.canvas.renderer.threads = vectorcraft_render::default_threads();

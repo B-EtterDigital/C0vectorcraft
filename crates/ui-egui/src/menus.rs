@@ -2102,6 +2102,9 @@ fn recent_slot<'a>(app: &'a VectorcraftApp, id: &str) -> Option<&'a String> {
 /// or off), or `None` while they leave it out: an empty slot ([`hidden_when_disabled`]) or an item
 /// another stands in for ([`swapped_out`]).
 pub fn shown_state(app: &VectorcraftApp, id: &str, p: &Value) -> Option<(bool, Option<bool>)> {
+    if crate::c0_host::allow(app, id).is_err() {
+        return None;
+    }
     let en = enabled(app, id);
     if (!en && hidden_when_disabled(id)) || swapped_out(app, id) {
         return None;
@@ -3373,7 +3376,7 @@ pub(crate) fn home_key(app: &VectorcraftApp) -> (Option<u64>, usize) {
 /// and Preferences › General › Show The Home Screen When No Documents Are Open is on (#394). Off,
 /// an app with no document shows an empty window, and the Home button still opens the screen.
 pub(crate) fn home_showing(app: &VectorcraftApp) -> bool {
-    app.ui.home.is_some() || (app.session.active().is_none() && app.session.prefs.show_home_screen)
+    app.c0.chrome.start_screen && (app.ui.home.is_some() || (app.session.active().is_none() && app.session.prefs.show_home_screen))
 }
 
 /// What a menu click runs: items whose label ends with "…" and that carry default params open a

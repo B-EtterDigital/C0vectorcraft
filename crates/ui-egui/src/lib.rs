@@ -15,6 +15,7 @@ macro_rules! tl {
 
 pub mod background;
 mod brand;
+pub mod c0_host;
 pub mod canvas;
 pub mod chrome;
 mod clipboard_probe;
@@ -396,6 +397,7 @@ pub struct Perf {
 }
 
 pub struct VectorcraftApp {
+    pub c0: c0_host::Host,
     pub session: Session,
     pub ui: UiState,
     pub views: Vec<View>,
@@ -472,6 +474,7 @@ pub struct VectorcraftApp {
     /// the answer.
     font_check: Option<(std::sync::mpsc::Receiver<bool>, bool)>,
     /// When installed fonts were last checked in line (app time, s).
+    #[cfg(not(target_arch = "wasm32"))]
     font_install_check_at: f64,
     /// Keyboard pastes of something other than text (see [`shortcuts::PasteChord`]).
     pub(crate) paste_chord: shortcuts::PasteChord,
@@ -519,6 +522,7 @@ struct PendingScreenshot {
 /// Seconds between two looks at the system clipboard for [`VectorcraftApp::system_paste`].
 const SYSTEM_CLIPBOARD_POLL: f64 = 0.25;
 /// Seconds between looks for fonts a font manager activated while the app stays in front (#2576).
+#[cfg(not(target_arch = "wasm32"))]
 const FONT_INSTALL_POLL: f64 = 2.0;
 
 impl VectorcraftApp {
@@ -530,6 +534,7 @@ impl VectorcraftApp {
         }
         let views = session.documents().iter().map(View::of).collect();
         Self {
+            c0: Default::default(),
             session,
             ui: UiState::default(),
             views,
@@ -585,6 +590,7 @@ impl VectorcraftApp {
             picks: picks::Picks::default(),
             screen_sampler: None,
             font_check: None,
+            #[cfg(not(target_arch = "wasm32"))]
             font_install_check_at: f64::NEG_INFINITY,
             paste_chord: Default::default(),
             background: Default::default(),
@@ -727,6 +733,7 @@ impl VectorcraftApp {
 
     /// [`Self::run`] it, inside what asks for file dialogs.
     fn run_now(&mut self, id: &str, params: Value) -> Result<Value, String> {
+        c0_host::allow(self, id)?;
         crate::state::sync_zoom_stops_display_print_size(self.session.prefs.display_print_size);
         self.run_count = self.run_count.wrapping_add(1);
         // In debug builds the app's own calls are held to the params descriptions too (#1442): a
@@ -1271,6 +1278,7 @@ impl VectorcraftApp {
         // system title bar this is where the document name lives, as the in-app mark is hidden.
         crate::chrome::sync_window_title(self, ctx);
         self.drain_control(ctx);
+        c0_host::tick(self);
         if !self.synthetic.is_empty() {
             ctx.request_repaint();
         }
@@ -1456,7 +1464,9 @@ impl VectorcraftApp {
         canvas::release_over_panel(self, &ctx);
         let t = theme::Tokens::get(&ctx);
         if self.ui.screen_mode < 2 {
-            chrome::app_bar(self, ui);
+            if self.c0.chrome.app_bar {
+                chrome::app_bar(self, ui);
+            }
             if self.ui.control_bar {
                 chrome::control_bar(self, ui);
             }

@@ -2995,7 +2995,9 @@ fn home_content(app: &mut VectorcraftApp, ui: &mut Ui) {
         }
     });
     ui.add_space(28.0);
-    ui.label(egui::RichText::new(tl!("Community")).font(theme::semibold(14.0)).color(t.text));
+    if app.c0.chrome.community_links {
+        ui.label(egui::RichText::new(tl!("Community")).font(theme::semibold(14.0)).color(t.text));
+    }
     ui.add_space(10.0);
     crate::community::links(app, ui);
 }

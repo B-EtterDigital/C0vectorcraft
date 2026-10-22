@@ -64,6 +64,9 @@ fn link(app: &mut VectorcraftApp, ui: &mut Ui, icon: &str, label: &str, cmd: &st
 
 /// The Discord button and the website / app page / GitHub links.
 pub fn links(app: &mut VectorcraftApp, ui: &mut Ui) {
+    if !app.c0.chrome.community_links {
+        return;
+    }
     discord_button(app, ui, true);
     ui.add_space(8.0);
     let l = app.session.execute("help.links", &serde_json::json!({})).unwrap_or_default();
