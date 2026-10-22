@@ -4638,6 +4638,7 @@ dependencies = [
  "hayro-ccitt",
  "image",
  "jpeg-encoder",
+ "js-sys",
  "kurbo 0.13.1",
  "proptest",
  "serde",

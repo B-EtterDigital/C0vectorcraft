@@ -107,7 +107,7 @@ fn stamp_from_env(get: impl Fn(&str) -> Option<String>) -> Option<i64> {
     get("SOURCE_DATE_EPOCH")?.trim().parse::<i64>().ok().filter(|t| *t >= 0)
 }
 
-/// The current time as Unix seconds (UTC); `None` where the platform has no clock (the web build).
+/// The current time as Unix seconds (UTC); `None` when the platform clock is unavailable or invalid.
 #[cfg(not(target_arch = "wasm32"))]
 pub fn now_unix() -> Option<i64> {
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -115,7 +115,8 @@ pub fn now_unix() -> Option<i64> {
 }
 #[cfg(target_arch = "wasm32")]
 pub fn now_unix() -> Option<i64> {
-    None
+    let seconds = js_sys::Date::now() / 1000.0;
+    (seconds.is_finite() && (0.0..i64::MAX as f64).contains(&seconds)).then(|| seconds.floor() as i64)
 }
 
 /// Unix seconds (UTC) → `[year, month, day, hour, minute, second]` (civil-from-days, proleptic
