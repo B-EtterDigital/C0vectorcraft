@@ -45,7 +45,8 @@ git diff --numstat --diff-filter=M main c0/main -- . ':!c0'
 - `crates/ui-egui/src/c0_host.rs`, `c0_host/c0_*.rs`: host state, inspection/navigation,
   settings and file lifecycle.
 - `crates/ui-egui/src/theme/host.rs`: complete context-local Color32 registry/overrides.
-- `crates/ui-egui/tests/c0_*.rs`: native contract, chrome, palette, rendering, queue and theme tests.
+- `crates/ui-egui/tests/c0_*.rs`: native contract, chrome, palette, rendering, queue, theme and tool-mode tests.
+- Tool modes and `right_dock_collapsed` live in `c0_host/c0_panels.rs`: they set the app's own `toolbar_double`, `toolbar_pos` and `dock_collapsed` (via `dock::set_collapsed`), so they add no upstream line (Ratchet stays 57).
 
 ## Couplings to recheck on upstream pulls
 
@@ -56,6 +57,7 @@ git diff --numstat --diff-filter=M main c0/main -- . ':!c0'
 | `c0_files` | Close owns Save Changes; document uids identify the replaced active document; `read_for_open`/`open_read` split validation from activation | Save/Discard/Cancel, background-tab retention, invalid input retention and snapshot round trips |
 | `c0_state` | DocState revision/history, layer hierarchy, View.artboard and navigation commands | Inspect and navigation contract tests |
 | `Chrome` | Menu shown_state, palette matching, shared community list, credits profile link, Home predicate | Default behaviour and rendered link-suppression tests |
+| `c0_panels.rs` tool modes | `UiState.toolbar_double`, `toolbar_pos` (Some = floating palette, `toolbar::show`), `dock::set_collapsed`, `floating::TOOLS_AT` (copied as `FLOAT_AT`) | `c0_tool_modes.rs` |
 | `theme/host.rs` | Every scalar Color32 field, token access and egui visuals application | Field registry, clearing and light/dark persistence tests |
 | Browser clock | `metadata::now_unix` returns bounded Unix seconds; SOURCE_DATE_EPOCH remains upstream | Native metadata suite and wasm checks/build |
 

@@ -101,9 +101,25 @@ It cannot dismiss operating-system chooser UI. It also cancels a pending host re
 ## Chrome settings
 
 `panels` accepts booleans for `app_bar`, `start_screen`, `community_links`, `toolbar`,
-`control_bar`, `task_bar`, `dock`, `status_bar`, `rulers`. The three new Chrome switches default
+`toolbar_double`, `toolbar_floating`, `right_dock_collapsed`, `control_bar`, `task_bar`, `dock`, `status_bar`, `rulers`. The three new Chrome switches default
 to true in the upstream app, are not serialized, and do not modify saved preferences.
 The page sets the first three false. Existing UI flags keep upstream defaults.
+
+### Tool modes and the folding dock
+
+Same keys as PhotoCraft's `c0.set {panels}`; all are booleans, session-only (no preference is
+written), reported by `c0.inspect.panes`, and default to the upstream state (false):
+
+| Key | Meaning |
+|---|---|
+| `toolbar_double` | The Tools panel in two columns (the double arrow at its top) instead of one |
+| `toolbar_floating` | The Tools panel as the app's own floating palette (`UiState.toolbar_pos`) instead of docked on the left edge; a position the user already dragged it to is kept, otherwise it opens at the app's default corner (60, 120) |
+| `right_dock_collapsed` | The right dock's tabbed group folds to its icon column (each icon still pops its panel out) and unfolds again, as the dock's double arrow does; it does not change the `dock` switch |
+
+The four tool modes are `toolbar_double` x `toolbar_floating`: docked one column (both false),
+docked two columns, floating one column, floating two columns. `toolbar` still shows or hides the
+panel in every mode. Folding is immediate (the app's own, no animation): the panel layout resizes the canvas area.
+Tests: `crates/ui-egui/tests/c0_tool_modes.rs`.
 
 `start_screen:false` prevents Home on startup, after closing, and via `app.home`, for this session.
 `community_links:false` removes Discord, ArtCraft, getartcraft and project GitHub promotions

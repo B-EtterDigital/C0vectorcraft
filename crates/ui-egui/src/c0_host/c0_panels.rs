@@ -1,11 +1,38 @@
 use crate::{VectorcraftApp, theme};
 use serde_json::{Value, json};
 
-pub const KEYS: &[&str] = &["app_bar", "start_screen", "community_links", "toolbar", "control_bar", "task_bar", "dock", "status_bar", "rulers"];
+pub const KEYS: &[&str] = &[
+    "app_bar",
+    "start_screen",
+    "community_links",
+    "toolbar",
+    "toolbar_double",
+    "toolbar_floating",
+    "right_dock_collapsed",
+    "control_bar",
+    "task_bar",
+    "dock",
+    "status_bar",
+    "rulers",
+];
+
+/// Where the floating Tools palette appears when the host floats it: the app's own default for
+/// `window.panel.float` on the tools (`floating::TOOLS_AT`), in screen points.
+const FLOAT_AT: [f32; 2] = [60.0, 120.0];
+
+/// The dock folded to its icon strip. Like `window.collapseDock`, except that it leaves the
+/// `dock` switch alone, so the two keys do not depend on the order they arrive in.
+fn fold_dock(app: &mut VectorcraftApp, folded: bool) {
+    let shown = app.ui.dock;
+    crate::dock::set_collapsed(app, folded);
+    app.ui.dock = shown;
+}
 
 pub fn snapshot(app: &VectorcraftApp) -> Value {
     json!({"app_bar":app.c0.chrome.app_bar, "start_screen":app.c0.chrome.start_screen,
         "community_links":app.c0.chrome.community_links, "toolbar":app.ui.toolbar,
+        "toolbar_double":app.ui.toolbar_double, "toolbar_floating":app.ui.toolbar_pos.is_some(),
+        "right_dock_collapsed":app.ui.dock_collapsed,
         "control_bar":app.ui.control_bar, "task_bar":app.ui.task_bar, "dock":app.ui.dock,
         "status_bar":app.ui.status_bar, "rulers":app.ui.view.rulers})
 }
@@ -39,6 +66,12 @@ pub fn set(app: &mut VectorcraftApp, ctx: &egui::Context, params: &Value) -> Val
                         }
                         "community_links" => app.c0.chrome.community_links = on,
                         "toolbar" => app.ui.toolbar = on,
+                        "toolbar_double" => app.ui.toolbar_double = on,
+                        "toolbar_floating" => {
+                            // Floating keeps a position the user already dragged it to.
+                            app.ui.toolbar_pos = if on { app.ui.toolbar_pos.or(Some(FLOAT_AT)) } else { None };
+                        }
+                        "right_dock_collapsed" => fold_dock(app, on),
                         "control_bar" => app.ui.control_bar = on,
                         "task_bar" => app.ui.task_bar = on,
                         "dock" => app.ui.dock = on,
