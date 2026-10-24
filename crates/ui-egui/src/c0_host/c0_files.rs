@@ -72,7 +72,7 @@ pub fn open(app: &mut VectorcraftApp, ctx: &egui::Context, p: &Value) -> Result<
     if vectorcraft_format::base64_encode(&bytes) != text {
         return Err("bytes must be valid standard base64".into());
     }
-    let file = fileio::read_for_open(name, &bytes, None, &json!({}), false).map_err(|e| e.to_string())?;
+    let file = fileio::read_for_open(name, &bytes, None, &json!({}), false, app.session.prefs.low_res_proxy_eps).map_err(|e| e.to_string())?;
     cancel_picker(ctx);
     replace(app, Action::Open(Box::new(file)))
 }
