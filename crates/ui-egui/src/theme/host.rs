@@ -79,6 +79,7 @@ colors!(
     caption_close_text,
     highlight,
     bleed,
+    artboard_mark,
     error,
     warning,
     axis_x,
