@@ -266,7 +266,7 @@ fn slider(ui: &mut Ui, label: &str, v: &mut f64, range: std::ops::RangeInclusive
         ui.visuals_mut().selection.bg_fill = t.accent;
         let r = ui.add(egui::Slider::new(v, range).suffix(suffix).integer().trailing_fill(true));
         if cfg!(test) {
-            ui.ctx().data_mut(|d| d.insert_temp(egui::Id::new(("trace-slider", label)), r.rect));
+            ui.ctx().data_mut(|d| d.insert_temp(egui::Id::unique(("trace-slider", label)), r.rect));
         }
         out = (r.changed(), r.drag_stopped() || (r.changed() && !r.dragged()));
     });
@@ -324,7 +324,7 @@ pub fn show(app: &mut VectorcraftApp, ui: &mut Ui) {
         let held = app.ui.trace_hold_source.is_some();
         let r = widgets::icon_button_enabled(ui, "eye", tl!("Press and hold to view the source image"), held, is_trace, eye);
         if cfg!(test) {
-            ui.ctx().data_mut(|d| d.insert_temp(egui::Id::new("trace-hold-source"), r.rect));
+            ui.ctx().data_mut(|d| d.insert_temp(egui::Id::unique("trace-hold-source"), r.rect));
         }
         hold_source(app, ui.ctx(), is_trace && r.is_pointer_button_down_on());
     });
@@ -610,7 +610,7 @@ mod tests {
         app.run("imageTrace.release", json!({})).unwrap();
         app.ui.image_trace_advanced = false;
         trace_and_open(&mut app, "Sketched Art");
-        assert_eq!(app.ui.open_panel.as_deref(), Some("imageTrace"));
+        assert!(crate::panel_docking::showing(&app.ui, "imageTrace"));
         assert!(app.ui.image_trace_advanced);
         assert_eq!(selected_trace(&app).unwrap().0, "Sketched Art");
         let ctx = egui::Context::default();
@@ -625,7 +625,7 @@ mod tests {
         // Opening controls again neither closes the flyout nor adds a document undo step.
         let steps = app.session.active().unwrap().history.undo.len();
         open_settings(&mut app);
-        assert_eq!(app.ui.open_panel.as_deref(), Some("imageTrace"));
+        assert!(crate::panel_docking::showing(&app.ui, "imageTrace"));
         assert_eq!(app.session.active().unwrap().history.undo.len(), steps);
         // Optional local visual QA; no reference images or generated captures are committed.
         if let Some(path) = std::env::var_os("VECTORCRAFT_TRACE_CAPTURE") {
@@ -668,7 +668,7 @@ mod tests {
         trace_and_open(&mut app, "Sketched Art");
         let after = app.ui.docking.as_ref().unwrap();
         assert_eq!(after.floating.len(), before.floating.len());
-        assert!(after.floating.iter().any(|g| g.panels == ["imageTrace"]));
+        assert!(after.floating.iter().any(|g| crate::panel_docking::window_panels(g) == ["imageTrace"]));
         assert!(app.ui.open_panel.is_none(), "the existing floating group owns the panel");
     }
 
@@ -679,7 +679,7 @@ mod tests {
         let ctx = egui::Context::default();
         crate::theme::install_fonts(&ctx);
         frame(&mut app, &ctx, vec![]);
-        let rail = ctx.data(|d| d.get_temp::<Rect>(egui::Id::new(("trace-slider", "Threshold")))).unwrap();
+        let rail = ctx.data(|d| d.get_temp::<Rect>(egui::Id::unique(("trace-slider", "Threshold")))).unwrap();
         let at = rail.left_center() + vec2(20.0, 0.0);
         assert_eq!(first_selected(&app).unwrap().children().unwrap().len(), 2, "source and ink path");
         for pressed in [true, false] {
@@ -710,7 +710,7 @@ mod tests {
         click(&mut app, &ctx, "Preview");
         assert!(!app.ui.image_trace_preview);
         let steps = app.session.active().unwrap().history.undo.len();
-        let rail = ctx.data(|d| d.get_temp::<Rect>(egui::Id::new(("trace-slider", "Threshold")))).unwrap();
+        let rail = ctx.data(|d| d.get_temp::<Rect>(egui::Id::unique(("trace-slider", "Threshold")))).unwrap();
         let at = rail.left_center() + vec2(20.0, 0.0);
         for pressed in [true, false] {
             frame(
@@ -850,7 +850,7 @@ mod tests {
         crate::theme::install_fonts(&ctx);
         for (label, key) in [("Threshold", "threshold"), ("Paths", "paths"), ("Corners", "corners"), ("Noise", "noise")] {
             frame(&mut app, &ctx, vec![]);
-            let rail = ctx.data(|d| d.get_temp::<Rect>(egui::Id::new(("trace-slider", label)))).unwrap();
+            let rail = ctx.data(|d| d.get_temp::<Rect>(egui::Id::unique(("trace-slider", label)))).unwrap();
             let at = rail.left_center() + vec2(20.0, 0.0);
             let press = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Default::default() };
             let before = target(&app).2.unwrap()["params"][key].clone();
@@ -891,7 +891,7 @@ mod tests {
         let undo = |app: &VectorcraftApp| app.session.active().unwrap().history.undo.len();
         let revision = |app: &VectorcraftApp| app.session.active().unwrap().revision;
         let (steps, rev) = (undo(&app), revision(&app));
-        let at = ctx.data(|d| d.get_temp::<Rect>(egui::Id::new("trace-hold-source"))).unwrap().center();
+        let at = ctx.data(|d| d.get_temp::<Rect>(egui::Id::unique("trace-hold-source"))).unwrap().center();
         let press = |pressed| Event::PointerButton { pos: at, button: PointerButton::Primary, pressed, modifiers: Default::default() };
         frame(&mut app, &ctx, vec![Event::PointerMoved(at), press(true)]);
         assert_eq!(app.ui.trace_hold_source.as_deref(), Some(&vec![id]), "held: the object shows its source image");
@@ -932,7 +932,7 @@ mod tests {
             let mut out = ctx.run_ui(egui::RawInput { events, ..Default::default() }, |ui| super::super::properties::show(&mut app, ui));
             out.textures_delta.clear();
         }
-        assert_eq!(app.ui.open_panel.as_deref(), Some("imageTrace"));
+        assert!(crate::panel_docking::showing(&app.ui, "imageTrace"));
     }
 
     /// #1358: in Properties the View row fits the panel, so the panel doesn't widen and clip its

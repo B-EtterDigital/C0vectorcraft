@@ -1100,10 +1100,8 @@ font-technology	Variable	Változó
 	Drag the art to move it on the paper	Húzd a grafikát a papíron való áthelyezéshez
 	Drag the light, or its rings. Shift snaps to 15°.	Húzd a fényt vagy a gyűrűit. Shift: illesztés 15°-onként.
 	Drag to float as a toolbar	Húzd el, hogy önálló eszköztárként lebegjen
-	Drag to float the panel group	Húzással a panelcsoport lebegtethető
 	Drag to float the toolbar	Húzd el az eszköztár lebegtetéséhez
 	Drag to move	Húzással áthelyezhető
-	Drag to move out of the set	Húzással kivehető a csoportból
 	Drag to the window's left edge to dock	Dokkoláshoz húzd az ablak bal szélére
 	Step up or down	Léptetés fel vagy le
 	Drag values or labels. Double-click a value to type.	Húzd az értékeket vagy a címkéket. Gépeléshez kattints duplán egy értékre.
@@ -2972,7 +2970,6 @@ mark-style	Japanese	Japán
 	Puppet Warp Pins	Bábtorzítás tűi
 	Puppet Warp Tool	Bábtorzítás
 	Purple	Lila
-	Put back in the dock	Visszahelyezés a dokkba
 	Put back in the toolbar	Visszahelyezés az eszköztárba
 	Quality	Minőség
 	Quality {quality}	Minőség: {quality}
@@ -4641,7 +4638,6 @@ imageTrace	Outline	Körvonal
 @msg	give the path `id` and the width point `index`	add meg az útvonal `id` és a szélességi pont `index` értékét
 @msg	gradient “{name}” isn't defined in the file: a plain colour stands in for it	a színátmenet nincs megadva a fájlban: „{name}”; helyette egyszínű kitöltés áll
 @msg	group must be true or false	a group értéke true vagy false lehet
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	a panel lebeg; a csoportját a window.panel.float {panel, collapsed} paranccsal csukhatja össze
 @msg	panel is not in a dock group	a panel nincs dokkolt csoportban
 @msg	only a dock group above or below others collapses, not one beside another	csak a többi fölötti vagy alatti dokkolt csoport csukható össze, a mellettük lévő nem
 @msg	icon must be true or false	az icon értéke true vagy false lehet
@@ -5075,6 +5071,7 @@ imageTrace	Outline	Körvonal
 @msg	truncated	csonka
 @msg	Unembedded to {_1}	Beágyazás megszüntetve, ide: {_1}
 @msg	unknown command `{0}`	ismeretlen parancs: `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	ismeretlen parancs: `{0}`; erre gondolt: `{1}`?
 @msg	unknown effect `{id}`	ismeretlen effektus: `{id}`
 @msg	unknown format	ismeretlen formátum
 @msg	unknown format `{f}` (Save writes {_1})	ismeretlen formátum: `{f}` (a Mentés ezeket írja: {_1})
@@ -5125,6 +5122,7 @@ imageTrace	Outline	Körvonal
 @msg	{_1} is an exporter (File › Export › Export As…)	exportáló bővítmény: {_1} (Fájl › Exportálás › Exportálás másként…)
 @msg	`documentData` is {size} bytes (limit {MAX_DOCUMENT_DATA})	a `documentData` mérete {size} bájt (korlát: {MAX_DOCUMENT_DATA})
 @msg	{_1} is already used by {_2}	már foglalt: {_1} (használja: {_2})
+@msg	{_1} is reserved by the system	A(z) {_1} a rendszer számára foglalt
 @msg	{_1} linked file(s) can't be read here: their previews show	Itt nem olvasható csatolt fájlok: {_1}; az előnézetük látszik
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	A lemezen módosult csatolt képek: {_1}; a Csatolások frissítése az új változatokat mutatja
 @msg	{_1}: not saved, so not closed	{_1}: nincs mentve, ezért nem záródott be
@@ -5375,6 +5373,7 @@ imageTrace	Outline	Körvonal
 @msg	Persistent libraries not found: {files}	Nem találhatók állandó könyvtárak: {files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	A(z) `{given}` nem könyvtárpanel (lásd: window.swatchLibrary)
 @msg	library panel `{given}` isn't open	a(z) `{given}` könyvtárpanel nincs megnyitva
+@msg	too many changed shortcuts	túl sok módosított billentyűparancs
 @msg	library panel `{given}` isn't missing its library	a(z) `{given}` könyvtárpanel könyvtára nem hiányzik
 @msg	too many library panels were opened in this session	ebben a munkamenetben túl sok könyvtárpanel nyílt meg
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	A kép {_1} × {_2} képpont, egyik oldalán több mint {LARGE_TRACE_SIDE}: a vektorizálás megtörténik, de lassabban. Kisebb hűségű előbeállítással vagy a kép kisebb másolatával gyorsabb.
@@ -5533,3 +5532,6 @@ axis	Y Axis	Y tengely
 	Rectangular Grid Tool Options	Téglalaprács beállításai
 	Polar Grid Tool Options	Polárrács beállításai
 	Fill Line	Szakasz kitöltése
+	Scale Presets	Méretezési beállítások
+@msg	a {width}×{height} screenshot's byte count overflows	a(z) {width}×{height} képernyőkép bájtszáma túlcsordul
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	az ablak {what} ({points} pont × {scale} DPI) nem tud képernyőkép-méretet adni

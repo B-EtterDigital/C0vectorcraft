@@ -3738,13 +3738,10 @@ axis	Horizontal	水平方向
 axis	Vertical	垂直方向
 axis	Both	両方
 	Drag to move	移動するにはドラッグ
-	Drag to move out of the set	ドラッグしてセットから出す
 	Drag to float as a toolbar	ドラッグしてツールバーとして浮かせる
 	Put back in the toolbar	ツールバーに戻す
 	Float Panel	パネルをフローティング
 	Dock Panel	パネルをドッキング
-	Drag to float the panel group	ドラッグしてパネルグループをフローティング
-	Put back in the dock	ドックに戻す
 	Drag to float the toolbar	ドラッグしてツールバーをフローティング
 	Drag to the window's left edge to dock	ウィンドウの左端までドラッグしてドッキング
 	Float Tool Group	ツールグループをフローティング
@@ -4190,6 +4187,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	objects can't be nested more than 32 deep	オブジェクトは 32 階層より深く入れ子にできません
 @msg	the SVG's elements are nested more than {0} deep	SVG の要素が {0} 階層より深く入れ子になっています
 @msg	unknown command `{0}`	`{0}` は不明なコマンドです
+@msg	unknown command `{0}`; did you mean `{1}`?	`{0}` は不明なコマンドです。`{1}` のことですか?
 @msg	`{what}` closes nothing	`{what}` に対応する開始部分がありません
 @msg	`{what}` closes something it didn't open	`{what}` が対応しない開始部分を閉じています
 @msg	a path has too many points	ポイントが多すぎるパスがあります
@@ -4529,6 +4527,7 @@ swatch	Bright Violet	ビビッドバイオレット
 @msg	unknown preset (one of {_1})	不明なプリセットです ({_1} のいずれかを指定してください)
 @msg	unknown tool or command `{key}`	`{key}` は不明なツールまたはコマンドです
 @msg	{_1} is already used by {_2}	{_1} はすでに {_2} で使用されています
+@msg	{_1} is reserved by the system	{_1} はシステムで予約されています
 @msg	Couldn't copy to the system clipboard: {e}	システムのクリップボードにコピーできませんでした: {e}
 @msg	Couldn't paste from the clipboard: {e}	クリップボードから貼り付けられませんでした: {e}
 @msg	nothing selected	何も選択されていません
@@ -4702,7 +4701,6 @@ effect	Vertical	垂直
 @msg	before must name a panel	before にパネルを指定してください
 @msg	docking action contains an unknown panel or an excessive split path	ドッキング操作に不明なパネルまたは長すぎる分割パスが含まれています
 @msg	group must be true or false	group は true または false にしてください
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	パネルはフローティング中です。グループは window.panel.float {panel, collapsed} で折りたたんでください
 @msg	panel is not in a dock group	パネルはドックのグループにありません
 @msg	only a dock group above or below others collapses, not one beside another	折りたためるのは他のグループの上下にあるドックのグループだけで、横に並んだグループは折りたためません
 @msg	icon must be true or false	icon は true または false である必要があります
@@ -5042,6 +5040,7 @@ lighting	Light	ライト
 @msg	Persistent libraries not found: {files}	永続ライブラリが見つかりません: {files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	`{given}` はライブラリパネルではありません (window.swatchLibrary を参照)
 @msg	library panel `{given}` isn't open	ライブラリパネル `{given}` は開いていません
+@msg	too many changed shortcuts	変更したショートカットが多すぎます
 @msg	library panel `{given}` isn't missing its library	ライブラリパネル `{given}` のライブラリは欠落していません
 @msg	too many library panels were opened in this session	このセッションで開いたライブラリパネルが多すぎます
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	画像は {_1} × {_2} ピクセルで、一辺が {LARGE_TRACE_SIDE} を超えています。トレースはできますが、時間がかかります。忠実度の低いプリセットや画像の小さいコピーを使うと速くなります。
@@ -5225,3 +5224,6 @@ axis	Y Axis	Y 軸
 	Rectangular Grid Tool Options	長方形グリッドツールオプション
 	Polar Grid Tool Options	同心円グリッドツールオプション
 	Fill Line	線を塗りつぶす
+	Scale Presets	拡大縮小のプリセット
+@msg	a {width}×{height} screenshot's byte count overflows	{width}×{height} のスクリーンショットのバイト数がオーバーフローします
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	ウィンドウの {what}（{points} ポイント × {scale} DPI）ではスクリーンショットのサイズを決められません

@@ -1901,6 +1901,7 @@ file-filter	Templates	範本
 @msg	objects can't be nested more than 32 deep	物件的巢狀層級不能超過 32 層
 @msg	the SVG's elements are nested more than {0} deep	SVG 的元素巢狀超過 {0} 層
 @msg	unknown command `{0}`	未知的指令 `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	未知的指令 `{0}`；您是指 `{1}` 嗎？
 @msg	`{what}` closes nothing	`{what}` 沒有可結束的內容
 @msg	`{what}` closes something it didn't open	`{what}` 結束了並非由它開始的內容
 @msg	a path has too many points	有一條路徑的點過多
@@ -2230,6 +2231,7 @@ file-filter	Templates	範本
 @msg	unknown preset (one of {_1})	未知的預設集 (應為 {_1} 其中之一)
 @msg	unknown tool or command `{key}`	未知的工具或指令 `{key}`
 @msg	{_1} is already used by {_2}	{_1} 已由 {_2} 使用
+@msg	{_1} is reserved by the system	{_1} 已被系統保留
 @msg	Couldn't copy to the system clipboard: {e}	無法複製到系統剪貼簿：{e}
 @msg	Couldn't paste from the clipboard: {e}	無法從剪貼簿貼上：{e}
 @msg	nothing selected	未選取任何物件
@@ -2299,7 +2301,6 @@ file-filter	Templates	範本
 @msg	before must name a panel	before 必須指定面板
 @msg	docking action contains an unknown panel or an excessive split path	停駐動作包含未知的面板或過長的分割路徑
 @msg	group must be true or false	group 必須是 true 或 false
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	面板處於浮動狀態；請使用 window.panel.float {panel, collapsed} 摺疊其面板群組
 @msg	panel is not in a dock group	面板不在停駐群組中
 @msg	only a dock group above or below others collapses, not one beside another	只有位於其他群組上方或下方的停駐群組可以摺疊，並排的不行
 @msg	icon must be true or false	icon 必須為 true 或 false
@@ -2370,6 +2371,7 @@ file-filter	Templates	範本
 @msg	Persistent libraries not found: {files}	找不到持久資料庫：{files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	`{given}` 不是資料庫面板 (請參閱 window.swatchLibrary)
 @msg	library panel `{given}` isn't open	資料庫面板 `{given}` 未開啟
+@msg	too many changed shortcuts	已變更的快速鍵過多
 @msg	library panel `{given}` isn't missing its library	資料庫面板 `{given}` 的資料庫未遺失
 @msg	too many library panels were opened in this session	本次工作階段開啟的資料庫面板過多
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	影像為 {_1} × {_2} 像素，有一邊超過 {LARGE_TRACE_SIDE}：仍會描圖，但速度較慢。使用精確度較低的預設集或較小的影像拷貝，描圖會較快。
@@ -4572,13 +4574,10 @@ axis	Horizontal	水平
 axis	Vertical	垂直
 axis	Both	兩者
 	Drag to move	拖曳以移動
-	Drag to move out of the set	拖曳以移出該組合
 	Drag to float as a toolbar	拖曳使其浮動為工具列
 	Put back in the toolbar	放回工具列
 	Float Panel	浮動面板
 	Dock Panel	停駐面板
-	Drag to float the panel group	拖曳以浮動面板群組
-	Put back in the dock	放回停駐區
 	Drag to float the toolbar	拖曳以浮動工具列
 	Drag to the window's left edge to dock	拖曳到視窗左側邊緣以停駐
 	Float Tool Group	浮動工具組
@@ -5182,3 +5181,6 @@ axis	Y Axis	Y 軸
 	Rectangular Grid Tool Options	矩形格線工具選項
 	Polar Grid Tool Options	極座標格點工具選項
 	Fill Line	填色線段
+	Scale Presets	縮放預設集
+@msg	a {width}×{height} screenshot's byte count overflows	{width}×{height} 螢幕擷取畫面的位元組數溢出
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	視窗的{what}（{points} 點 × {scale} DPI）無法決定螢幕擷取畫面的大小

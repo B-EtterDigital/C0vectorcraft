@@ -3797,13 +3797,10 @@ axis	Horizontal	Горизонтально
 axis	Vertical	Вертикально
 axis	Both	Оба
 	Drag to move	Перетащите для перемещения
-	Drag to move out of the set	Перетащите, чтобы вынести из набора
 	Drag to float as a toolbar	Перетащите, чтобы сделать плавающей панелью инструментов
 	Put back in the toolbar	Вернуть на панель инструментов
 	Float Panel	Сделать панель плавающей
 	Dock Panel	Прикрепить панель
-	Drag to float the panel group	Перетащите, чтобы сделать группу панелей плавающей
-	Put back in the dock	Вернуть в док
 	Drag to float the toolbar	Перетащите, чтобы сделать панель инструментов плавающей
 	Drag to the window's left edge to dock	Перетащите к левому краю окна для прикрепления
 	Float Tool Group	Сделать группу инструментов плавающей
@@ -4363,6 +4360,7 @@ axis	Both	Оба
 @msg	tool shortcuts must be a single key (optionally with Shift)	сочетания инструментов должны быть одной клавишей (необязательно с Shift)
 @msg	truncated	усечено
 @msg	unknown command `{0}`	неизвестная команда `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	неизвестная команда `{0}`; возможно, имелась в виду `{1}`?
 @msg	unknown effect `{id}`	неизвестный эффект `{id}`
 @msg	unknown format	неизвестный формат
 @msg	unknown format `{f}` (Save writes {_1})	неизвестный формат `{f}` (сохранение записывает {_1})
@@ -4399,6 +4397,7 @@ axis	Both	Оба
 @msg	{_1} is an exporter (File › Export › Export As…)	{_1} — модуль экспорта (Файл › Экспорт › Экспортировать как…)
 @msg	`documentData` is {size} bytes (limit {MAX_DOCUMENT_DATA})	`documentData` занимает {size} байт (предел {MAX_DOCUMENT_DATA})
 @msg	{_1} is already used by {_2}	{_1} уже используется {_2}
+@msg	{_1} is reserved by the system	Сочетание {_1} зарезервировано системой
 @msg	{_1} linked file(s) can't be read here: their previews show	здесь невозможно прочитать связанных файлов: {_1}: отображаются их предварительные просмотры
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	связанных изображений ({_1}) изменились на диске: «Обновить связи» покажет новые версии
 @msg	Updated {_1} linked file(s) changed on disk	Обновлено связанных файлов, измененных на диске: {_1}
@@ -4658,7 +4657,6 @@ axis	Both	Оба
 @msg	before must name a panel	before должен указывать панель
 @msg	docking action contains an unknown panel or an excessive split path	Действие прикрепления содержит неизвестную панель или слишком длинный путь разделений
 @msg	group must be true or false	group должен иметь значение true или false
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	панель плавающая; сверните её группу через window.panel.float {panel, collapsed}
 @msg	panel is not in a dock group	панель не находится в группе дока
 @msg	only a dock group above or below others collapses, not one beside another	свернуть можно только группу дока над или под другими, а не рядом с ними
 @msg	icon must be true or false	icon должен быть true или false
@@ -4998,6 +4996,7 @@ lighting	Light	Свет
 @msg	Persistent libraries not found: {files}	Постоянные библиотеки не найдены: {files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	`{given}` — не панель библиотеки (см. window.swatchLibrary)
 @msg	library panel `{given}` isn't open	панель библиотеки `{given}` не открыта
+@msg	too many changed shortcuts	слишком много изменённых сочетаний
 @msg	library panel `{given}` isn't missing its library	библиотека панели библиотеки `{given}` не отсутствует
 @msg	too many library panels were opened in this session	в этом сеансе открыто слишком много панелей библиотек
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	Изображение {_1} × {_2} пикселей, больше {LARGE_TRACE_SIDE} по одной стороне: трассировка выполняется, но медленнее. Стиль с меньшей точностью или уменьшенная копия изображения трассируются быстрее.
@@ -5159,3 +5158,6 @@ axis	Y Axis	Ось Y
 	Rectangular Grid Tool Options	Параметры инструмента «Прямоугольная сетка»
 	Polar Grid Tool Options	Параметры инструмента «Полярная сетка»
 	Fill Line	Заливка отрезка
+	Scale Presets	Наборы масштаба
+@msg	a {width}×{height} screenshot's byte count overflows	количество байтов снимка {width}×{height} переполняется
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	{what} окна ({points} пунктов × {scale} DPI) не позволяет задать размер снимка

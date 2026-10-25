@@ -3026,7 +3026,6 @@ imageTrace	Outline	Contorno
 	% of all commits	% de todos os commits
 	Lines +/−	Linhas +/−
 	Drag to move	Arraste para mover
-	Drag to move out of the set	Arraste para tirar do conjunto
 	Drag to float as a toolbar	Arraste para flutuar como barra de ferramentas
 	Put back in the toolbar	Devolver à barra de ferramentas
 	Float Panel	Flutuar Painel
@@ -3356,8 +3355,6 @@ font-technology	Variable	Variáveis
 axis	Horizontal	Horizontal
 axis	Vertical	Vertical
 axis	Both	Ambos
-	Drag to float the panel group	Arraste para flutuar o grupo de painéis
-	Put back in the dock	Devolver ao dock
 	Drag to float the toolbar	Arraste para flutuar a barra de ferramentas
 	Drag to the window's left edge to dock	Arraste até a borda esquerda da janela para encaixar
 @msg	no library `{id}`	nenhuma biblioteca `{id}`
@@ -3900,6 +3897,7 @@ axis	Both	Ambos
 @msg	tool shortcuts must be a single key (optionally with Shift)	os atalhos de ferramenta devem ser uma única tecla (opcionalmente com Shift)
 @msg	truncated	truncado
 @msg	unknown command `{0}`	comando desconhecido `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	comando desconhecido `{0}`; você quis dizer `{1}`?
 @msg	unknown effect `{id}`	efeito desconhecido `{id}`
 @msg	unknown format	formato desconhecido
 @msg	unknown format `{f}` (Save writes {_1})	formato desconhecido `{f}` (Salvar grava {_1})
@@ -3936,6 +3934,7 @@ axis	Both	Ambos
 @msg	{_1} is an exporter (File › Export › Export As…)	{_1} é um plug-in de exportação (Arquivo › Exportar › Exportar Como…)
 @msg	`documentData` is {size} bytes (limit {MAX_DOCUMENT_DATA})	`documentData` tem {size} bytes (limite {MAX_DOCUMENT_DATA})
 @msg	{_1} is already used by {_2}	{_1} já é usado por {_2}
+@msg	{_1} is reserved by the system	{_1} é reservado pelo sistema
 @msg	{_1} linked file(s) can't be read here: their previews show	{_1} arquivo(s) vinculado(s) não podem ser lidos aqui: suas visualizações são exibidas
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	{_1} imagem(ns) vinculada(s) mudou(aram) no disco: Atualizar links mostra as novas versões
 @msg	{_1}: not saved, so not closed	{_1}: não salvo, portanto não fechado
@@ -4074,7 +4073,6 @@ axis	Both	Ambos
 @msg	before must name a panel	before deve nomear um painel
 @msg	docking action contains an unknown panel or an excessive split path	a ação de encaixe contém um painel desconhecido ou um caminho de divisão excessivo
 @msg	group must be true or false	group deve ser true ou false
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	o painel está flutuando; recolha o grupo com window.panel.float {panel, collapsed}
 @msg	panel is not in a dock group	o painel não está em um grupo do encaixe
 @msg	only a dock group above or below others collapses, not one beside another	só um grupo do encaixe acima ou abaixo de outros é recolhido, não um ao lado
 @msg	icon must be true or false	icon deve ser true ou false
@@ -5306,6 +5304,7 @@ mark-style	Japanese	Japonesas
 @msg	Persistent libraries not found: {files}	Bibliotecas persistentes não encontradas: {files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	`{given}` não é um painel de biblioteca (consulte window.swatchLibrary)
 @msg	library panel `{given}` isn't open	o painel de biblioteca `{given}` não está aberto
+@msg	too many changed shortcuts	atalhos alterados demais
 @msg	library panel `{given}` isn't missing its library	a biblioteca do painel de biblioteca `{given}` não está faltando
 @msg	too many library panels were opened in this session	foram abertos painéis de biblioteca demais nesta sessão
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	A imagem tem {_1} × {_2} pixels, mais de {LARGE_TRACE_SIDE} em um lado: ela é traçada, mas mais devagar. Uma predefinição de menor fidelidade ou uma cópia menor da imagem traça mais rápido.
@@ -5464,3 +5463,6 @@ axis	Y Axis	Eixo Y
 	Rectangular Grid Tool Options	Opções da Ferramenta Grade Retangular
 	Polar Grid Tool Options	Opções da Ferramenta Grade Polar
 	Fill Line	Preencher linha
+	Scale Presets	Predefinições de escala
+@msg	a {width}×{height} screenshot's byte count overflows	a contagem de bytes de uma captura {width}×{height} transborda
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	o {what} da janela ({points} pontos × {scale} DPI) não pode dimensionar uma captura

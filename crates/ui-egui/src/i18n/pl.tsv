@@ -716,7 +716,6 @@
 	% of all commits	% wszystkich commitów
 	Lines +/−	Wiersze +/−
 	Drag to move	Przeciągnij, aby przesunąć
-	Drag to move out of the set	Przeciągnij, aby wyjąć z zestawu
 	Drag to float as a toolbar	Przeciągnij, aby oderwać jako pasek narzędzi
 	Put back in the toolbar	Odłóż z powrotem na pasek narzędzi
 	Float Panel	Odepnij panel
@@ -3672,8 +3671,6 @@ effect	Regular	Normalny
 	Replace With Font	Zastąp czcionką
 	  — substituted by {style}	  — zastąpiona przez {style}
 	  — {n} characters from another font	  — znaki z innej czcionki: {n}
-	Drag to float the panel group	Przeciągnij, aby odpiąć grupę paneli
-	Put back in the dock	Odłóż z powrotem do doku
 	All Scripts	Wszystkie skrypty
 	Any Kind	Dowolny rodzaj
 	Font Technology	Technologia czcionek
@@ -4454,6 +4451,7 @@ imageTrace	Outline	Kontur
 @msg	tool shortcuts must be a single key (optionally with Shift)	skróty narzędzi muszą być pojedynczym klawiszem (opcjonalnie z Shift)
 @msg	truncated	obcięty
 @msg	unknown command `{0}`	nieznane polecenie `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	nieznane polecenie `{0}`; czy chodziło o `{1}`?
 @msg	unknown effect `{id}`	nieznany efekt `{id}`
 @msg	unknown format	nieznany format
 @msg	unknown format `{f}` (Save writes {_1})	nieznany format `{f}` (zapis tworzy {_1})
@@ -4490,6 +4488,7 @@ imageTrace	Outline	Kontur
 @msg	{_1} is an exporter (File › Export › Export As…)	{_1} to wtyczka eksportu (Plik › Eksportuj › Eksportuj jako…)
 @msg	`documentData` is {size} bytes (limit {MAX_DOCUMENT_DATA})	`documentData` ma {size} bajtów (limit {MAX_DOCUMENT_DATA})
 @msg	{_1} is already used by {_2}	{_1} jest już używany przez {_2}
+@msg	{_1} is reserved by the system	Skrót {_1} jest zarezerwowany przez system
 @msg	{_1} linked file(s) can't be read here: their previews show	połączonych plików nie można tu odczytać ({_1}): wyświetlane są ich podglądy
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	połączone obrazy zmienione na dysku: {_1} — Aktualizuj łącza pokaże nowe wersje
 @msg	{_1}: not saved, so not closed	{_1}: nie zapisano, więc nie zamknięto
@@ -4633,7 +4632,6 @@ imageTrace	Outline	Kontur
 @msg	icon must be true or false	icon musi mieć wartość true lub false
 @msg	icon only docks a panel in the icon column, with no anchor	icon tylko dokuje panel w kolumnie ikon, bez anchor
 @msg	column docks a set as a dock column, with no anchor or icon	column dokuje zestaw jako kolumnę doku, bez anchor ani icon
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	panel jest pływający; zwiń jego grupę za pomocą window.panel.float {panel, collapsed}
 @msg	panel is not in a dock group	panel nie należy do żadnej grupy doku
 @msg	only a dock group above or below others collapses, not one beside another	zwinąć można tylko grupę doku nad lub pod innymi, a nie obok innej
 @msg	move requires a destination panel	przeniesienie wymaga panelu docelowego
@@ -5241,6 +5239,7 @@ mark-style	Japanese	Japońskie
 @msg	Persistent libraries not found: {files}	Nie znaleziono trwałych bibliotek: {files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	`{given}` nie jest panelem biblioteki (zobacz window.swatchLibrary)
 @msg	library panel `{given}` isn't open	panel biblioteki `{given}` nie jest otwarty
+@msg	too many changed shortcuts	zbyt wiele zmienionych skrótów
 @msg	library panel `{given}` isn't missing its library	panelowi biblioteki `{given}` nie brakuje biblioteki
 @msg	too many library panels were opened in this session	w tej sesji otwarto zbyt wiele paneli bibliotek
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	Obraz ma {_1} × {_2} pikseli, ponad {LARGE_TRACE_SIDE} na jednym boku: zostanie obrysowany, ale wolniej. Ustawienie wstępne o niższej wierności lub mniejsza kopia obrazu obrysuje się szybciej.
@@ -5399,3 +5398,6 @@ axis	Y Axis	Oś Y
 	Rectangular Grid Tool Options	Opcje narzędzia Siatka prostokątna
 	Polar Grid Tool Options	Opcje narzędzia Siatka biegunowa
 	Fill Line	Wypełnij odcinek
+	Scale Presets	Ustawienia wstępne skali
+@msg	a {width}×{height} screenshot's byte count overflows	liczba bajtów zrzutu ekranu {width}×{height} przekracza limit
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	{what} okna ({points} punktów × {scale} DPI) nie pozwala ustalić rozmiaru zrzutu ekranu

@@ -12,7 +12,7 @@ use vectorcraft_engine::cmd::fileio::SaveMode;
 use crate::VectorcraftApp;
 use crate::io;
 use crate::panels::character::Face;
-use crate::state::{DockTab, next_zoom};
+use crate::state::next_zoom;
 use crate::theme::{Brightness, Tokens};
 use crate::widgets;
 
@@ -473,7 +473,7 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "window.panel.move",
         "Move Panel",
         "",
-        "{panel, anchor, zone?: tab|center|left|right|top|bottom, before?: panel} group, split or reorder a panel",
+        "{panel, anchor, zone?: tab|center|left|right|top|bottom|above|below, before?: panel, group?: bool, placement?} move a panel (with `group`, its whole group) into the group holding `anchor`: as a tab (before the `before` panel; null appends), a split beside it, or (`above` / `below`) a group of its own above or below it in its dock column or floating window; `placement` (a serialized Placement) replaces zone and before",
     ),
     ("window.panel.activate", "Activate Panel", "", "{panel} show and select a panel in its current group"),
     ("window.panel.close", "Close Panel", "", "{panel} hide a panel"),
@@ -481,25 +481,25 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "window.panel.collapse",
         "Collapse Panel Group",
         "",
-        "{panel, collapsed?: bool} show the dock group holding a panel as its tabs only (or its panel again), as a double-click on its tab does; the panel becomes the group's shown one. Without `collapsed` it toggles. Floating groups collapse through window.panel.float {panel, collapsed}. Returns {panel, collapsed}",
+        "{panel, collapsed?: bool} minimize the group holding a panel to its tabs (in a floating window, the window to its title bar), or restore it, as a double-click on a tab or the drag bar does; the same as window.panel.minimize {panel, minimized}. Without `collapsed` it toggles. Returns {panel, collapsed, layout}",
     ),
     (
         "window.panel.float",
         "Float Panel",
         "",
-        "{panel: id or \"tools\", x?, y?, onto?: id, below?: id, above?: id, group?: bool, collapsed?: bool} float a panel out of the dock (or out of its floating group) as its own floating group with its top-left corner at x, y in window points (default: cascaded), as dragging its tab out of the dock does; `onto` stacks it as a tab with the floating group holding that panel instead; `below` / `above` puts its group in a set with that group, right below or above it, as dropping it on that group's lower or upper half does (the set's groups stack top to bottom and move together); `group` takes its whole group (its floating group, or the Properties | Layers | Libraries tabs left in the dock); a panel alone in its group is moved (out of its set, given x, y); `collapsed` shows its group's tabs only, as a double-click on a tab does; a docked group floats its dock column. \"tools\" floats the Tools panel. Returns {panel, floating, group, set, pos, collapsed, column}",
+        "{panel: id or \"tools\", x?, y?, width?, height?, group?: bool, column?: bool or n, onto?: id, above?: id, below?: id, collapsed?: bool} float a panel (with `group`, its whole group; with `column`, its whole dock column or floating window) as a floating window with its top-left corner at x, y in window points (default: inside the dock area, cascaded), as dragging its tab out does; a whole floating window keeps its rect unless given one. `onto` makes it a tab of the floating group holding that panel instead; `above` / `below` a group of its own above or below the group holding that panel, in its floating window or dock column. `collapsed` then minimizes (true) or restores (false) its window or group. A hidden panel shows first. \"tools\" floats the Tools panel at x, y. Returns {layout, closed, floating}",
     ),
     (
         "window.panel.dock",
         "Dock Panel",
         "",
-        "{panel: id or \"tools\", group?: bool, column?: true or n, anchor?: id, zone?: \"tab\" | \"top\" | \"bottom\" | \"left\" | \"right\" | \"center\", before?: id, icon?: bool} put a floating panel (with `group`, its whole group) back in the dock, as dropping it on the dock or its group's × does: Properties, Layers and Libraries in the tabbed group, the other panels in the icon column; with `anchor`, in the dock group holding that panel instead: `zone` \"tab\" (the default) as a tab of it (before the `before` panel's tab), as dropping it on that group's tabs does, \"top\" / \"bottom\" as a new group above / below it, as dropping it on that group's upper / lower half does (\"left\", \"right\" and \"center\" split or join it likewise); with `icon: true` (no `anchor`), as icons in the icon column, the tabbed group's panels too, as dropping it on the icon column does: it lives there from then on and pops out of its icon; with `column`, dock its group and the rest of its set as a dock column instead, as dropping it on the left edge of the icon column or of a dock column does: `true` at the dock's left, n at that place (1: next to the icon column, counting left); \"tools\" docks the Tools panel at the window's left edge. Returns {panel, floating, column}, or with `anchor` or `icon: true` (the shared layout) {panel, floating, layout} and no `column`",
+        "{panel: id or \"tools\", anchor?: id, zone?: tab|center|left|right|top|bottom|above|below, before?: id, group?: bool, column?: bool or n, side?: Start|End, onto?: id, above?: id, below?: id, icon?: bool, collapsed?: bool} dock a panel (with `group`, its whole group): with no destination a floating panel goes back where it floated from (else joins the first dock group) and a hidden one shows where it was; with `anchor` (or `onto`) in the group holding that panel, `zone` as for window.panel.move; with `side`, as a new innermost column of that dock (`column: true` then moves its whole dock column or floating window); `column: n` with no other destination docks its group, or the whole floating window it floats in, as a new dock column at that place (1: next to the icon column, counting inwards; `true`: innermost); `icon: true` puts it in a row of its own at the end of the icon column; `above` / `below` as a group of its own above or below the group holding that panel. `collapsed` then minimizes or restores its group. \"tools\" docks the Tools panel at the left edge of the window. Returns {layout, closed, floating}",
     ),
     (
         "window.collapseDock",
         "Collapse Panels to Icons",
         "",
-        "{collapsed?: bool} collapse the dock's Properties | Layers | Libraries group to icons (true), expand it (false) or toggle (omitted), as the double arrow at the top of the dock does; returns the new state",
+        "{collapsed?: bool} collapse every expanded dock column to icons (true), expand the outer dock column, Properties | Layers | Libraries (false), or toggle the outer column (omitted), as the double arrow at the top of the dock does; returns the new state",
     ),
     ("window.brightness", "UI Brightness", "", "{brightness: dark|mediumDark|mediumLight|light}"),
     (
@@ -554,6 +554,7 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "{} opens the Save PDF dialog; with params = document.exportPdf options written to path (asked when missing; viewAfterSaving opens the file) → {path, bytes, warnings}",
     ),
     ("help.about", "About VectorCraft", "", "{}"),
+    ("help.checkForUpdates", "Check for Updates…", "", "{}"),
     ("help.commandPalette", "Search Commands…", "Cmd+Shift+/", "{}"),
     ("app.quit", "Quit VectorCraft", "Cmd+Q", "{}"),
     (
@@ -1287,7 +1288,6 @@ pub fn run_ui_command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<R
     }
     if let Some(r) = crate::shortcut_editor::run_command(app, id, p)
         .or_else(|| crate::workspaces::run_command(app, id, p))
-        .or_else(|| crate::floating::command(app, id, p))
         .or_else(|| crate::edit_toolbar::command(app, id, p))
     {
         return Some(r);
@@ -1636,49 +1636,6 @@ pub fn run_ui_command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<R
             }
             Ok(json!(on))
         }
-        "window.collapseDock" => opt_bool(p, "collapsed").map(|collapsed| {
-            let collapsed = collapsed.unwrap_or(!app.ui.dock_collapsed);
-            crate::dock::set_collapsed(app, collapsed);
-            json!(collapsed)
-        }),
-        "window.panel" => {
-            let raw = s("panel").unwrap_or_default();
-            // Canonical id (case-insensitive; display labels work too), then the
-            // dock tab it names, if any.
-            let canonical = normalize_panel(&raw);
-            // A floating panel shows its tab in its group.
-            if let Some(p) = canonical
-                && let Some(g) = crate::floating::group_of(&app.ui, p).and_then(|i| app.ui.floating_panels.get_mut(i))
-            {
-                g.active = g.panels.iter().position(|q| q == p).unwrap_or(g.active);
-                g.collapsed = false;
-                let out = json!({ "floating": g.panels });
-                app.ui.dock = true;
-                return Some(Ok(out));
-            }
-            let tab = canonical.and_then(DockTab::from_id);
-            match (canonical, tab) {
-                // A collapsed dock pops the panel out of its icon, like the icon panels.
-                (Some(p), Some(tab)) if app.ui.dock_collapsed => {
-                    app.ui.dock_tab = tab;
-                    app.ui.open_panel = if app.ui.open_panel.as_deref() == Some(p) { None } else { Some(p.to_string()) };
-                    app.ui.dock = true;
-                    Ok(json!({"open": app.ui.open_panel}))
-                }
-                (Some(_), Some(tab)) => {
-                    app.ui.dock_tab = tab;
-                    Ok(Value::Null)
-                }
-                // A library panel isn't in the icon column: it floats.
-                (Some(p), None) if crate::panels::library_panel::parse(p).is_some() => crate::panels::library_panel::float(app, p),
-                (Some(p), None) => {
-                    app.ui.open_panel = if app.ui.open_panel.as_deref() == Some(p) { None } else { Some(p.to_string()) };
-                    app.ui.dock = true;
-                    Ok(json!({"open": app.ui.open_panel}))
-                }
-                (None, _) => Err(format!("unknown panel `{raw}`")),
-            }
-        }
         "window.brightness" => match s("brightness").as_deref().and_then(Brightness::parse) {
             Some(b) => {
                 app.ui.brightness = b;
@@ -1723,6 +1680,7 @@ pub fn run_ui_command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<R
             app.ui.about = true;
             Ok(Value::Null)
         }
+        "help.checkForUpdates" => crate::updates_ui::check(app),
         "help.commandPalette" => {
             app.ui.palette_open = !app.ui.palette_open;
             app.ui.palette_query.clear();
@@ -2040,17 +1998,9 @@ pub fn checked(app: &VectorcraftApp, id: &str, p: &Value) -> Option<bool> {
         "window.taskBar.pin" => app.ui.task_bar_place.pinned,
         "window.panel" => {
             let panel = p.get("panel").and_then(Value::as_str).unwrap_or("");
-            let canonical = normalize_panel(panel);
-            match canonical.and_then(DockTab::from_id) {
-                _ if app.ui.docking.is_some() => canonical.is_some_and(|id| {
-                    app.ui.open_panel.as_deref() == Some(id) || app.ui.docking.as_ref().is_some_and(|layout| layout.contains(&id.to_string()))
-                }),
-                _ if canonical.is_some_and(|id| crate::floating::group_of(&app.ui, id).is_some()) => true,
-                Some(tab) if !app.ui.dock_collapsed => crate::floating::shown_tab(&app.ui) == Some(tab),
-                _ => canonical.is_some_and(|id| app.ui.open_panel.as_deref() == Some(id)),
-            }
+            normalize_panel(panel).is_some_and(|id| crate::panel_docking::showing(&app.ui, id))
         }
-        "window.collapseDock" => app.ui.dock_collapsed,
+        "window.collapseDock" => crate::panel_docking::dock_collapsed(&app.ui),
         "window.workspace" => p.get("name").and_then(Value::as_str) == Some(app.ui.workspace.as_str()),
         "window.brightness" => p.get("brightness").and_then(Value::as_str).and_then(Brightness::parse) == Some(app.ui.brightness),
         "view.slices.lock" => app.session.slices_locked(),
@@ -3278,6 +3228,7 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
                 c("Search Commands…", "help.commandPalette"),
                 todos("VectorCraft Help…", "F1"),
                 Sep,
+                c("Check for Updates…", "help.checkForUpdates"),
                 c("About VectorCraft", "help.about"),
             ],
         ),
@@ -3469,7 +3420,7 @@ pub fn menu_bar(app: &mut VectorcraftApp, ui: &mut egui::Ui) -> f32 {
     // its text (#516), the frame after the click that chose them (that click takes the keyboard
     // from it again).
     type Field = (egui::Id, egui::text_edit::TextEditState);
-    let (field_key, chosen_key) = (egui::Id::new("menu-bar-field"), egui::Id::new("menu-bar-field-event"));
+    let (field_key, chosen_key) = (egui::Id::unique("menu-bar-field"), egui::Id::unique("menu-bar-field-event"));
     if let Some(((field, state), e)) = ctx.data(|d| d.get_temp::<(Field, egui::Event)>(chosen_key)) {
         ctx.data_mut(|d| d.remove::<(Field, egui::Event)>(chosen_key));
         state.store(&ctx, field);
@@ -3483,12 +3434,17 @@ pub fn menu_bar(app: &mut VectorcraftApp, ui: &mut egui::Ui) -> f32 {
     // No application menu in the window (as in Illustrator): the bar starts at File on every
     // platform. The VectorCraft menu stays in the tree: the native Mac bar takes it from there.
     let tree: Vec<(&str, Vec<Item>)> = tree.into_iter().filter(|(title, _)| *title != "VectorCraft").collect();
+    // A menu bar for its layout and menu-button style, but the titles use `Popup::menu` directly:
+    // egui 0.37's `MenuButton` opens the title under a resting pointer while another menu is open,
+    // and the app switches titles on movement only (`switch_on_hover`, the native behaviour).
     let (end, open) = egui::MenuBar::new()
         .ui(ui, |ui| {
             let mut titles = Vec::with_capacity(tree.len());
             for (title, items) in tree.iter() {
                 let text = egui::RichText::new(tl!(title)).size(13.0).color(t.text);
-                titles.push(ui.menu_button(text, |ui| menu_body(app, ui, items, &mut clicked)).response);
+                let resp = ui.add(egui::Button::new(text));
+                egui::Popup::menu(&resp).show(|ui| menu_body(app, ui, items, &mut clicked));
+                titles.push(resp);
             }
             (ui.cursor().min.x, switch_on_hover(ui.ctx(), &titles))
         })
@@ -3593,7 +3549,7 @@ fn render_row(app: &VectorcraftApp, ui: &mut egui::Ui, row: &Row, checks: bool, 
     let sampled = p.get("font").and_then(Value::as_str).filter(|_| id == "text.setStyle" && app.session.prefs.font_preview);
     let r = match sampled {
         Some(family) => {
-            let slot = ui.id().with(("font-sample", family));
+            let slot = egui::IdSalt::new(("font-sample", family));
             let button = egui::Button::new(text).right_text(egui::Atom::custom(slot, crate::font_menu::MENU_SAMPLE_SIZE));
             let out = ui.add_enabled_ui(row.enabled, |ui| button.atom_ui(ui)).inner;
             if let Some(rect) = out.rect(slot) {
@@ -4460,10 +4416,10 @@ mod tests {
                 egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(300.0, 200.0))), ..Default::default() };
             let mut out = ctx.run_ui(raw, |ui| {
                 let ctx = ui.ctx().clone();
-                let covered = ui.interact(egui::Rect::from_center_size(p, egui::vec2(80.0, 24.0)), egui::Id::new("covered"), egui::Sense::click());
+                let covered = ui.interact(egui::Rect::from_center_size(p, egui::vec2(80.0, 24.0)), egui::Id::unique("covered"), egui::Sense::click());
                 let q = p + egui::vec2(0.0, 100.0);
-                let free = ui.interact(egui::Rect::from_center_size(q, egui::vec2(80.0, 24.0)), egui::Id::new("free"), egui::Sense::click());
-                egui::Area::new(egui::Id::new("popup")).order(egui::Order::Foreground).fixed_pos(p - egui::vec2(10.0, 10.0)).show(&ctx, |ui| {
+                let free = ui.interact(egui::Rect::from_center_size(q, egui::vec2(80.0, 24.0)), egui::Id::unique("free"), egui::Sense::click());
+                egui::Area::new(egui::Id::unique("popup")).order(egui::Order::Foreground).fixed_pos(p - egui::vec2(10.0, 10.0)).show(&ctx, |ui| {
                     ui.allocate_space(egui::vec2(20.0, 20.0));
                 });
                 reaches = (pointer_reaches_title(&ctx, &covered, p), pointer_reaches_title(&ctx, &free, q));
@@ -4780,7 +4736,7 @@ mod tests {
         let e = ed::entry("view.preciseCursors").expect("listed in the editor");
         assert_eq!((e.label.as_str(), e.group.as_str(), e.is_tool), ("Precise Cursors", "View", false));
         assert_eq!(ed::default_of("view.preciseCursors"), None, "no default key");
-        let mut overrides = std::collections::BTreeMap::new();
+        let mut overrides = craft_keymap::Overrides::new();
         assert_eq!(ed::effective_in(&overrides, "view.preciseCursors"), None);
         assert_eq!(ed::assign(&mut overrides, "view.preciseCursors", Some("Cmd+Alt+Shift+U"), false), Ok(vec![]));
         let chord = ed::effective_in(&overrides, "view.preciseCursors").expect("assigned");
@@ -4932,7 +4888,7 @@ mod tests {
         let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1600.0, 1000.0));
         let tree = menu_tree();
         let (_, file) = tree.iter().find(|(t, _)| *t == "File").unwrap();
-        let id = egui::Id::new("test-menu");
+        let id = egui::Id::unique("test-menu");
         for _ in 0..3 {
             let input = egui::RawInput { screen_rect: Some(screen), ..Default::default() };
             let mut out = ctx.run_ui(input, |ui| {
@@ -4956,7 +4912,7 @@ mod tests {
         crate::theme::install_fonts(&ctx);
         let tree = menu_tree();
         let (_, window) = tree.iter().find(|(t, _)| *t == "Window").unwrap();
-        let id = egui::Id::new("test-long-menu");
+        let id = egui::Id::unique("test-long-menu");
         let rect = |height: f32| {
             let screen = egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, height));
             for _ in 0..3 {

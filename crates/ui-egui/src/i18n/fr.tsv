@@ -3758,13 +3758,10 @@ axis	Horizontal	Horizontal
 axis	Vertical	Vertical
 axis	Both	Les deux
 	Drag to move	Faire glisser pour déplacer
-	Drag to move out of the set	Faire glisser pour sortir de l’ensemble
 	Drag to float as a toolbar	Faire glisser pour détacher en barre d’outils flottante
 	Put back in the toolbar	Remettre dans la barre d’outils
 	Float Panel	Rendre le panneau flottant
 	Dock Panel	Ancrer le panneau
-	Drag to float the panel group	Faire glisser pour rendre le groupe de panneaux flottant
-	Put back in the dock	Remettre dans la zone d’ancrage
 	Drag to float the toolbar	Faire glisser pour rendre la barre d’outils flottante
 	Drag to the window's left edge to dock	Faire glisser vers le bord gauche de la fenêtre pour ancrer
 	Float Tool Group	Rendre le groupe d’outils flottant
@@ -4324,6 +4321,7 @@ axis	Both	Les deux
 @msg	tool shortcuts must be a single key (optionally with Shift)	les raccourcis d’outils doivent être une seule touche (éventuellement avec Maj)
 @msg	truncated	tronqué
 @msg	unknown command `{0}`	commande inconnue `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	commande inconnue `{0}` ; vouliez-vous dire `{1}` ?
 @msg	unknown effect `{id}`	effet inconnu `{id}`
 @msg	unknown format	format inconnu
 @msg	unknown format `{f}` (Save writes {_1})	format inconnu `{f}` (Enregistrer écrit {_1})
@@ -4360,6 +4358,7 @@ axis	Both	Les deux
 @msg	{_1} is an exporter (File › Export › Export As…)	{_1} est un module externe d’exportation (Fichier › Exporter › Exporter sous…)
 @msg	`documentData` is {size} bytes (limit {MAX_DOCUMENT_DATA})	`documentData` fait {size} octets (limite {MAX_DOCUMENT_DATA})
 @msg	{_1} is already used by {_2}	{_1} est déjà utilisé par {_2}
+@msg	{_1} is reserved by the system	{_1} est réservé par le système
 @msg	{_1} linked file(s) can't be read here: their previews show	{_1} fichier(s) lié(s) illisible(s) ici : leurs aperçus sont affichés
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	{_1} image(s) liée(s) modifiée(s) sur le disque : Mettre à jour les liens affiche les nouvelles versions
 @msg	Updated {_1} linked file(s) changed on disk	{_1} fichier(s) lié(s) modifié(s) sur le disque mis à jour
@@ -4632,7 +4631,6 @@ effect	Soft	Doux
 @msg	before must name a panel	before doit désigner un panneau
 @msg	docking action contains an unknown panel or an excessive split path	L’action d’ancrage contient un panneau inconnu ou un chemin de divisions trop long
 @msg	group must be true or false	group doit être true ou false
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	le panneau est flottant ; réduisez son groupe avec window.panel.float {panel, collapsed}
 @msg	panel is not in a dock group	le panneau n’est dans aucun groupe du dock
 @msg	only a dock group above or below others collapses, not one beside another	seul un groupe du dock situé au-dessus ou au-dessous d’autres se réduit, pas un groupe à côté
 @msg	icon must be true or false	icon doit être true ou false
@@ -5388,6 +5386,7 @@ theme	Appearance	Apparence
 @msg	Persistent libraries not found: {files}	Bibliothèques persistantes introuvables : {files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	`{given}` n’est pas un panneau de bibliothèque (voir window.swatchLibrary)
 @msg	library panel `{given}` isn't open	le panneau de bibliothèque `{given}` n’est pas ouvert
+@msg	too many changed shortcuts	trop de raccourcis modifiés
 @msg	library panel `{given}` isn't missing its library	la bibliothèque du panneau de bibliothèque `{given}` ne manque pas
 @msg	too many library panels were opened in this session	trop de panneaux de bibliothèque ont été ouverts dans cette session
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	L’image fait {_1} × {_2} pixels, plus de {LARGE_TRACE_SIDE} sur un côté : elle est vectorisée, mais plus lentement. Un paramètre prédéfini moins fidèle ou une copie plus petite de l’image se vectorise plus vite.
@@ -5546,3 +5545,6 @@ axis	Y Axis	Axe Y
 	Rectangular Grid Tool Options	Options de l’outil Grille rectangulaire
 	Polar Grid Tool Options	Options de l’outil Grille à coordonnées polaires
 	Fill Line	Remplir le trait
+	Scale Presets	Préréglages de mise à l'échelle
+@msg	a {width}×{height} screenshot's byte count overflows	le nombre d'octets d'une capture {width}×{height} dépasse la limite
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	la {what} de la fenêtre ({points} points × {scale} DPI) ne permet pas de dimensionner une capture

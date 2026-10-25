@@ -984,10 +984,8 @@ font-technology	Variable	Biến thiên
 	Drag the art to move it on the paper	Kéo tác phẩm để di chuyển trên trang
 	Drag the light, or its rings. Shift snaps to 15°.	Kéo đèn hoặc vòng của nó. Shift khớp ở 15°.
 	Drag to float as a toolbar	Kéo để thả nổi thanh công cụ
-	Drag to float the panel group	Kéo để thả nổi nhóm bảng
 	Drag to float the toolbar	Kéo để thả nổi thanh công cụ
 	Drag to move	Kéo để di chuyển
-	Drag to move out of the set	Kéo để tách khỏi bộ
 	Drag to the window's left edge to dock	Kéo đến cạnh trái cửa sổ để neo
 	Step up or down	Tăng hoặc giảm một bước
 	Drag values or labels. Double-click a value to type.	Kéo giá trị hoặc nhãn. Bấm đúp vào giá trị để nhập.
@@ -2750,7 +2748,6 @@ mark-style	Japanese	Kiểu Nhật
 	Puppet Warp	Biến dạng con rối
 	Puppet Warp Pins	Ghim biến dạng con rối
 	Puppet Warp Tool	Công cụ Biến dạng con rối
-	Put back in the dock	Đặt trở lại vào vùng neo
 	Put back in the toolbar	Đặt trở lại vào thanh công cụ
 	Quality	Chất lượng
 	Quality {quality}	Chất lượng {quality}
@@ -4289,7 +4286,6 @@ theme	Appearance	Giao diện
 @msg	icon must be true or false	icon phải là true hoặc false
 @msg	icon only docks a panel in the icon column, with no anchor	icon chỉ neo bảng vào cột biểu tượng, không có anchor
 @msg	column docks a set as a dock column, with no anchor or icon	column neo một bộ thành cột neo, không có anchor hay icon
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	bảng đang nổi; hãy thu gọn nhóm của nó bằng window.panel.float {panel, collapsed}
 @msg	panel is not in a dock group	bảng không thuộc nhóm nào của dock
 @msg	only a dock group above or below others collapses, not one beside another	chỉ thu gọn được nhóm dock nằm trên hoặc dưới các nhóm khác, không phải nhóm nằm cạnh
 @msg	guides are locked	đường căn bị khóa
@@ -4730,6 +4726,7 @@ theme	Appearance	Giao diện
 @msg	truncated	bị cắt ngắn
 @msg	Unembedded to {_1}	Đã bỏ nhúng vào {_1}
 @msg	unknown command `{0}`	lệnh không xác định `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	lệnh không xác định `{0}`; ý bạn là `{1}`?
 @msg	unknown effect `{id}`	hiệu ứng không xác định `{id}`
 @msg	unknown format	định dạng không xác định
 @msg	unknown format `{f}` (Save writes {_1})	định dạng không xác định `{f}` (Lưu ghi {_1})
@@ -4783,6 +4780,7 @@ theme	Appearance	Giao diện
 @msg	{_1} is an exporter (File › Export › Export As…)	{_1} là plug-in xuất (Tệp › Xuất › Xuất thành…)
 @msg	`documentData` is {size} bytes (limit {MAX_DOCUMENT_DATA})	`documentData` có {size} byte (giới hạn {MAX_DOCUMENT_DATA})
 @msg	{_1} is already used by {_2}	{_1} đã được dùng bởi {_2}
+@msg	{_1} is reserved by the system	{_1} được hệ thống dành riêng
 @msg	{_1} linked file(s) can't be read here: their previews show	{_1} tệp liên kết không thể đọc ở đây: bản xem trước được hiển thị
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	{_1} ảnh liên kết đã thay đổi trên đĩa: Cập nhật liên kết hiển thị phiên bản mới
 @msg	{_1}: not saved, so not closed	{_1}: chưa lưu, nên không đóng
@@ -4982,6 +4980,7 @@ theme	Appearance	Giao diện
 @msg	Persistent libraries not found: {files}	Không tìm thấy thư viện lưu giữ: {files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	`{given}` không phải là bảng thư viện (xem window.swatchLibrary)
 @msg	library panel `{given}` isn't open	bảng thư viện `{given}` chưa được mở
+@msg	too many changed shortcuts	quá nhiều phím tắt đã thay đổi
 @msg	library panel `{given}` isn't missing its library	thư viện của bảng thư viện `{given}` không bị thiếu
 @msg	too many library panels were opened in this session	đã mở quá nhiều bảng thư viện trong phiên này
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	Ảnh có kích thước {_1} × {_2} điểm ảnh, hơn {LARGE_TRACE_SIDE} ở một cạnh: ảnh vẫn được dò, nhưng chậm hơn. Một thiết lập sẵn có độ trung thực thấp hơn hoặc một bản sao nhỏ hơn của ảnh sẽ dò nhanh hơn.
@@ -5143,3 +5142,6 @@ axis	Y Axis	Trục Y
 	Rectangular Grid Tool Options	Tùy chọn công cụ Lưới chữ nhật
 	Polar Grid Tool Options	Tùy chọn công cụ Lưới cực
 	Fill Line	Tô đoạn thẳng
+	Scale Presets	Cài đặt sẵn tỉ lệ
+@msg	a {width}×{height} screenshot's byte count overflows	số byte của ảnh chụp {width}×{height} bị tràn
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	{what} của cửa sổ ({points} điểm × {scale} DPI) không thể định cỡ ảnh chụp

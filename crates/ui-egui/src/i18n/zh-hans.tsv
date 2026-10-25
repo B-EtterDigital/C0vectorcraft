@@ -3921,6 +3921,7 @@ imageTrace	Outline	轮廓
 @msg	objects can't be nested more than 32 deep	对象的嵌套不能超过 32 层
 @msg	the SVG's elements are nested more than {0} deep	SVG 的元素嵌套超过 {0} 层
 @msg	unknown command `{0}`	未知命令 `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	未知命令 `{0}`；您是否想输入 `{1}`？
 @msg	`{what}` closes nothing	`{what}` 没有可结束的内容
 @msg	`{what}` closes something it didn't open	`{what}` 结束了并非由它开始的内容
 @msg	a path has too many points	某条路径的点过多
@@ -4250,6 +4251,7 @@ imageTrace	Outline	轮廓
 @msg	unknown preset (one of {_1})	未知预设 (应为 {_1} 之一)
 @msg	unknown tool or command `{key}`	未知工具或命令 `{key}`
 @msg	{_1} is already used by {_2}	{_1} 已被 {_2} 使用
+@msg	{_1} is reserved by the system	{_1} 已被系统保留
 @msg	Couldn't copy to the system clipboard: {e}	无法复制到系统剪贴板：{e}
 @msg	Couldn't paste from the clipboard: {e}	无法从剪贴板粘贴：{e}
 @msg	nothing selected	未选择任何对象
@@ -4324,7 +4326,6 @@ imageTrace	Outline	轮廓
 @msg	before must name a panel	before 必须指定面板
 @msg	docking action contains an unknown panel or an excessive split path	停靠操作包含未知面板或过长的拆分路径
 @msg	group must be true or false	group 必须是 true 或 false
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	面板处于浮动状态；请使用 window.panel.float {panel, collapsed} 折叠其面板组
 @msg	panel is not in a dock group	面板不在停放组中
 @msg	only a dock group above or below others collapses, not one beside another	只有位于其他组上方或下方的停放组可以折叠，并排的不行
 @msg	icon must be true or false	icon 必须为 true 或 false
@@ -4769,13 +4770,10 @@ axis	Horizontal	水平
 axis	Vertical	垂直
 axis	Both	两者
 	Drag to move	拖动以移动
-	Drag to move out of the set	拖动以移出该组合
 	Drag to float as a toolbar	拖动使其浮动为工具栏
 	Put back in the toolbar	放回工具栏
 	Float Panel	浮动面板
 	Dock Panel	停放面板
-	Drag to float the panel group	拖动以浮动面板组
-	Put back in the dock	放回停放区
 	Drag to float the toolbar	拖动以浮动工具栏
 	Drag to the window's left edge to dock	拖到窗口左边缘以停放
 	Float Tool Group	浮动工具组
@@ -5221,6 +5219,7 @@ lighting	Light	光源
 @msg	Persistent libraries not found: {files}	找不到持久库：{files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	`{given}` 不是库面板 (请参阅 window.swatchLibrary)
 @msg	library panel `{given}` isn't open	库面板 `{given}` 未打开
+@msg	too many changed shortcuts	已更改的快捷键过多
 @msg	library panel `{given}` isn't missing its library	库面板 `{given}` 的库未缺失
 @msg	too many library panels were opened in this session	本次会话中打开的库面板过多
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	图像为 {_1} × {_2} 像素，某一边超过 {LARGE_TRACE_SIDE}：会进行描摹，但速度较慢。使用保真度较低的预设或图像的较小副本会更快。
@@ -5386,3 +5385,6 @@ axis	Y Axis	Y 轴
 	Rectangular Grid Tool Options	矩形网格工具选项
 	Polar Grid Tool Options	极坐标网格工具选项
 	Fill Line	填充线段
+	Scale Presets	缩放预设
+@msg	a {width}×{height} screenshot's byte count overflows	{width}×{height} 截图的字节数溢出
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	窗口的{what}（{points} 点 × {scale} DPI）无法确定截图大小

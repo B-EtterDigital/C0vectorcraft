@@ -3790,13 +3790,10 @@ axis	Horizontal	Горизонтальна
 axis	Vertical	Вертикальна
 axis	Both	Обидві
 	Drag to move	Перетягніть для переміщення
-	Drag to move out of the set	Перетягніть, щоб винести з набору
 	Drag to float as a toolbar	Перетягніть, щоб від’єднати панель інструментів
 	Put back in the toolbar	Повернути на панель інструментів
 	Float Panel	Від’єднати панель
 	Dock Panel	Прикріпити панель
-	Drag to float the panel group	Перетягніть, щоб від’єднати групу панелей
-	Put back in the dock	Повернути у док
 	Drag to float the toolbar	Перетягніть, щоб від’єднати панель інструментів
 	Drag to the window's left edge to dock	Перетягніть до лівого краю вікна для прикріплення
 	Float Tool Group	Від’єднати групу інструментів
@@ -4351,6 +4348,7 @@ axis	Both	Обидві
 @msg	tool shortcuts must be a single key (optionally with Shift)	поєднання інструментів має бути однією клавішею (необов’язково з Shift)
 @msg	truncated	усічено
 @msg	unknown command `{0}`	невідома команда `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	невідома команда `{0}`; можливо, ви мали на увазі `{1}`?
 @msg	unknown effect `{id}`	невідомий ефект `{id}`
 @msg	unknown format	невідомий формат
 @msg	unknown format `{f}` (Save writes {_1})	невідомий формат `{f}` (збереження записує {_1})
@@ -4387,6 +4385,7 @@ axis	Both	Обидві
 @msg	{_1} is an exporter (File › Export › Export As…)	{_1} - модуль експорту (Файл › Експорт › Експортувати як…)
 @msg	`documentData` is {size} bytes (limit {MAX_DOCUMENT_DATA})	`documentData` займає {size} байт (межа {MAX_DOCUMENT_DATA})
 @msg	{_1} is already used by {_2}	{_1} вже використовується {_2}
+@msg	{_1} is reserved by the system	Сполучення {_1} зарезервоване системою
 @msg	{_1} linked file(s) can't be read here: their previews show	тут неможливо прочитати пов’язані файли: {_1}: відображаються їх попередні перегляди
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	пов’язаних зображень ({_1}) змінилися на диску: «Оновити зв’язки» покаже нові версії
 @msg	Updated {_1} linked file(s) changed on disk	Оновлено пов’язаних файлів, змінених на диску: {_1}
@@ -4644,7 +4643,6 @@ axis	Both	Обидві
 @msg	before must name a panel	before має вказувати панель
 @msg	docking action contains an unknown panel or an excessive split path	Дія прикріплення містить невідому панель або надто довгий шлях поділів
 @msg	group must be true or false	group має мати значення true або false
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	панель від’єднана; згорніть її групу через window.panel.float {panel, collapsed}
 @msg	panel is not in a dock group	панель не входить до групи дока
 @msg	only a dock group above or below others collapses, not one beside another	згорнути можна лише групу дока над або під іншими, а не поруч з ними
 @msg	icon must be true or false	icon має бути true або false
@@ -4982,6 +4980,7 @@ lighting	Light	Світло
 @msg	Persistent libraries not found: {files}	Постійні бібліотеки не знайдено: {files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	`{given}` — не панель бібліотеки (див. window.swatchLibrary)
 @msg	library panel `{given}` isn't open	панель бібліотеки `{given}` не відкрита
+@msg	too many changed shortcuts	забагато змінених поєднань
 @msg	library panel `{given}` isn't missing its library	бібліотека панелі бібліотеки `{given}` не відсутня
 @msg	too many library panels were opened in this session	у цьому сеансі відкрито забагато панелей бібліотек
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	Зображення {_1} × {_2} пікселів, понад {LARGE_TRACE_SIDE} з одного боку: трасування виконується, але повільніше. Стиль із нижчою точністю або менша копія зображення трасуються швидше.
@@ -5143,3 +5142,6 @@ axis	Y Axis	Вісь Y
 	Rectangular Grid Tool Options	Параметри інструменту «Прямокутна сітка»
 	Polar Grid Tool Options	Параметри інструменту «Полярна сітка»
 	Fill Line	Заливка відрізка
+	Scale Presets	Набори масштабу
+@msg	a {width}×{height} screenshot's byte count overflows	кількість байтів знімка {width}×{height} переповнюється
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	{what} вікна ({points} пунктів × {scale} DPI) не дозволяє задати розмір знімка

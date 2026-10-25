@@ -3761,13 +3761,10 @@ axis	Horizontal	Horizontal
 axis	Vertical	Vertical
 axis	Both	Ambos
 	Drag to move	Arrastrar para mover
-	Drag to move out of the set	Arrastrar para sacar del conjunto
 	Drag to float as a toolbar	Arrastrar para flotar como barra de herramientas
 	Put back in the toolbar	Devolver a la barra de herramientas
 	Float Panel	Hacer flotar el panel
 	Dock Panel	Anclar panel
-	Drag to float the panel group	Arrastrar para hacer flotar el grupo de paneles
-	Put back in the dock	Devolver al área de paneles
 	Drag to float the toolbar	Arrastrar para hacer flotar la barra de herramientas
 	Drag to the window's left edge to dock	Arrastrar al borde izquierdo de la ventana para anclar
 	Float Tool Group	Hacer flotar el grupo de herramientas
@@ -4327,6 +4324,7 @@ axis	Both	Ambos
 @msg	tool shortcuts must be a single key (optionally with Shift)	los atajos de herramientas deben ser una sola tecla (opcionalmente con Shift)
 @msg	truncated	truncado
 @msg	unknown command `{0}`	comando desconocido `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	comando desconocido `{0}`; ¿quiso decir `{1}`?
 @msg	unknown effect `{id}`	efecto desconocido `{id}`
 @msg	unknown format	formato desconocido
 @msg	unknown format `{f}` (Save writes {_1})	formato desconocido `{f}` (Guardar escribe {_1})
@@ -4363,6 +4361,7 @@ axis	Both	Ambos
 @msg	{_1} is an exporter (File › Export › Export As…)	{_1} es un plugin de exportación (Archivo › Exportar › Exportar como…)
 @msg	`documentData` is {size} bytes (limit {MAX_DOCUMENT_DATA})	`documentData` ocupa {size} bytes (límite {MAX_DOCUMENT_DATA})
 @msg	{_1} is already used by {_2}	{_1} ya lo usa {_2}
+@msg	{_1} is reserved by the system	{_1} está reservado por el sistema
 @msg	{_1} linked file(s) can't be read here: their previews show	aquí no se pueden leer {_1} archivo(s) vinculado(s): se muestran sus previsualizaciones
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	{_1} imagen(es) vinculada(s) cambiaron en el disco: Actualizar vínculos muestra las versiones nuevas
 @msg	Updated {_1} linked file(s) changed on disk	Se actualizaron {_1} archivo(s) vinculado(s) que cambiaron en el disco
@@ -4620,7 +4619,6 @@ axis	Both	Ambos
 @msg	before must name a panel	before debe indicar un panel
 @msg	docking action contains an unknown panel or an excessive split path	La acción de anclaje contiene un panel desconocido o una ruta de divisiones demasiado larga
 @msg	group must be true or false	group debe ser true o false
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	el panel flota; contraiga su grupo con window.panel.float {panel, collapsed}
 @msg	panel is not in a dock group	el panel no está en un grupo del acoplamiento
 @msg	only a dock group above or below others collapses, not one beside another	solo se contrae un grupo del acoplamiento situado encima o debajo de otros, no al lado
 @msg	icon must be true or false	icon debe ser true o false
@@ -5331,6 +5329,7 @@ mark-style	Japanese	Japonesas
 @msg	Persistent libraries not found: {files}	No se encontraron bibliotecas persistentes: {files}
 @msg	`{given}` isn't a library panel (see window.swatchLibrary)	`{given}` no es un panel de biblioteca (consulte window.swatchLibrary)
 @msg	library panel `{given}` isn't open	el panel de biblioteca `{given}` no está abierto
+@msg	too many changed shortcuts	demasiados atajos modificados
 @msg	library panel `{given}` isn't missing its library	la biblioteca del panel de biblioteca `{given}` no falta
 @msg	too many library panels were opened in this session	se abrieron demasiados paneles de biblioteca en esta sesión
 @msg	The image is {_1} × {_2} pixels, more than {LARGE_TRACE_SIDE} on a side: it is traced, but more slowly. A lower-fidelity preset or a smaller copy of the image traces faster.	La imagen tiene {_1} × {_2} píxeles, más de {LARGE_TRACE_SIDE} en un lado: se calcará, pero más despacio. Un ajuste preestablecido de menor fidelidad o una copia más pequeña de la imagen se calcan más rápido.
@@ -5489,3 +5488,6 @@ axis	Y Axis	Eje Y
 	Rectangular Grid Tool Options	Opciones de la herramienta Cuadrícula rectangular
 	Polar Grid Tool Options	Opciones de la herramienta Cuadrícula polar
 	Fill Line	Rellenar línea
+	Scale Presets	Ajustes predefinidos de escala
+@msg	a {width}×{height} screenshot's byte count overflows	el número de bytes de una captura de {width}×{height} se desborda
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	el {what} de la ventana ({points} puntos × {scale} DPI) no puede dimensionar una captura

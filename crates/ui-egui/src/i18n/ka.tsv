@@ -649,7 +649,6 @@
 	% of all commits	ყველა კომიტის %
 	Lines +/−	სტრიქონები +/−
 	Drag to move	გადაათრიეთ გადასაადგილებლად
-	Drag to move out of the set	გადაათრიეთ ნაკრებიდან გამოსატანად
 	Drag to float as a toolbar	გადაათრიეთ მცურავ ხელსაწყოთა ზოლად გადასაქცევად
 	Put back in the toolbar	ხელსაწყოთა ზოლში დაბრუნება
 	Float Panel	მცურავი პანელი
@@ -3361,8 +3360,6 @@ effect	Regular	ჩვეულებრივი
 	Replace With Font	ჩანაცვლება შრიფტით
 	  — substituted by {style}	  — ჩანაცვლებულია: {style}
 	  — {n} characters from another font	  — სხვა შრიფტის სიმბოლოები: {n}
-	Drag to float the panel group	გადაათრიეთ პანელების ჯგუფის მცურავად გადასაქცევად
-	Put back in the dock	დოკში დაბრუნება
 	All Scripts	ყველა დამწერლობა
 	Any Kind	ნებისმიერი ტიპი
 	Font Technology	შრიფტის ტექნოლოგია
@@ -4089,6 +4086,7 @@ font-technology	Variable	ცვლადი
 @msg	tool shortcuts must be a single key (optionally with Shift)	ხელსაწყოს მალსახმობი ერთი კლავიში უნდა იყოს (სურვილისამებრ Shift-ით)
 @msg	truncated	შეკვეცილია
 @msg	unknown command `{0}`	უცნობი ბრძანება `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	უცნობი ბრძანება `{0}`; იქნებ `{1}` იგულისხმეთ?
 @msg	unknown effect `{id}`	უცნობი ეფექტი `{id}`
 @msg	unknown format	უცნობი ფორმატი
 @msg	unknown format `{f}` (Save writes {_1})	უცნობი ფორმატი `{f}` (შენახვა წერს: {_1})
@@ -4121,6 +4119,7 @@ font-technology	Variable	ცვლადი
 @msg	{_1} is an exporter (File › Export › Export As…)	{_1} ექსპორტის პლაგინია (ფაილი › ექსპორტირება › ექსპორტირება ფორმატში…)
 @msg	`documentData` is {size} bytes (limit {MAX_DOCUMENT_DATA})	`documentData` {size} ბაიტია (ლიმიტი {MAX_DOCUMENT_DATA})
 @msg	{_1} is already used by {_2}	{_1} უკვე გამოიყენება აქ: {_2}
+@msg	{_1} is reserved by the system	{_1} დაჯავშნილია სისტემის მიერ
 @msg	{_1} linked file(s) can't be read here: their previews show	მიბმული ფაილების წაკითხვა აქ ვერ ხერხდება ({_1}): ჩანს მათი გადახედვა
 @msg	{_1} linked image(s) changed on disk: Update Links shows the new versions	მიბმული გამოსახულებები შეიცვალა დისკზე ({_1}): ბმულების განახლება აჩვენებს ახალ ვერსიებს
 @msg	{_1}: not saved, so not closed	{_1}: არ შენახულა, ამიტომ არ დაიხურა
@@ -4253,7 +4252,6 @@ font-technology	Variable	ცვლადი
 @msg	before must name a panel	before უნდა ასახელებდეს პანელს
 @msg	docking action contains an unknown panel or an excessive split path	მიმაგრების მოქმედება შეიცავს უცნობ პანელს ან ზედმეტად გრძელ გაყოფის გზას
 @msg	group must be true or false	group უნდა იყოს true ან false
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	პანელი მცურავია; მისი ჯგუფი აკეცეთ window.panel.float {panel, collapsed}-ით
 @msg	panel is not in a dock group	პანელი არ არის დოკის ჯგუფში
 @msg	only a dock group above or below others collapses, not one beside another	იკეცება მხოლოდ სხვების ზემოთ ან ქვემოთ მდებარე დოკის ჯგუფი, არა სხვის გვერდით მდებარე
 @msg	icon must be true or false	icon უნდა იყოს true ან false
@@ -5263,6 +5261,7 @@ imageTrace	Outline	კონტური
 @msg	the image has no usable size or position	გამოსახულებას არ აქვს გამოსადეგი ზომა ან პოზიცია
 @msg	the image's pixels can't be read	გამოსახულების პიქსელების წაკითხვა ვერ ხერხდება
 @msg	the spine has no segments	ხერხემალს სეგმენტები არ აქვს
+@msg	too many changed shortcuts	ზედმეტად ბევრი შეცვლილი მალსახმობი
 @msg	too many library panels were opened in this session	ამ სესიაში ზედმეტად ბევრი ბიბლიოთეკის პანელი გაიხსნა
 @msg	variables are locked	ცვლადები ჩაკეტილია
 @msg	variables that aren't text were left out: {kinds}	ცვლადები, რომლებიც ტექსტი არ არის, გამოტოვებულია: {kinds}
@@ -5463,3 +5462,6 @@ axis	Y Axis	Y ღერძი
 	Rectangular Grid Tool Options	მართკუთხა ბადის ხელსაწყოს პარამეტრები
 	Polar Grid Tool Options	პოლარული ბადის ხელსაწყოს პარამეტრები
 	Fill Line	ხაზის შევსება
+	Scale Presets	მასშტაბის წინასწარ დაყენებული მნიშვნელობები
+@msg	a {width}×{height} screenshot's byte count overflows	{width}×{height} ეკრანის სურათის ბაიტების რაოდენობა გადაივსო
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	ფანჯრის {what} ({points} პუნქტი × {scale} DPI) ეკრანის სურათის ზომას ვერ განსაზღვრავს

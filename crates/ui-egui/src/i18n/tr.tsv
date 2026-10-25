@@ -3580,13 +3580,10 @@ axis	Horizontal	Yatay
 axis	Vertical	Dikey
 axis	Both	Her İkisi
 	Drag to move	Taşımak için sürükleyin
-	Drag to move out of the set	Setin dışına çıkmak için sürükleyin
 	Drag to float as a toolbar	Bağımsız araç çubuğu yapmak için sürükleyin
 	Put back in the toolbar	Araç çubuğuna geri yerleştir
 	Float Panel	Paneli Yüzer Yap
 	Dock Panel	Bağlantı İstasyonu Paneli
-	Drag to float the panel group	Panel grubunu ayırmak için sürükleyin
-	Put back in the dock	Dock'a geri koy
 	Drag to float the toolbar	Araç çubuğunu ayırmak için sürükleyin
 	Drag to the window's left edge to dock	Sabitlemek için pencerenin sol kenarına sürükleyin
 	Float Tool Group	Araç Grubunu Yüzer Yap
@@ -3768,6 +3765,8 @@ axis	Both	Her İkisi
 @msg	bad colour `{hex}` (#rrggbb)	kötü renk `{hex}` (#rrggbb)
 @msg	bad page tree	kötü sayfa ağacı
 @msg	bad shortcut	kötü kısayol
+@msg	{_1} is reserved by the system	{_1} sistem tarafından ayrılmıştır
+@msg	too many changed shortcuts	değiştirilen kısayol sayısı çok fazla
 @msg	bad stream length	Kötü akış uzunluğu
 @msg	bad trailer	kötü römork
 @msg	balance must be between 0 and 100	bakiye 0 ile 100 arasında olmalıdır
@@ -4088,6 +4087,7 @@ axis	Both	Her İkisi
 @msg	tool shortcuts must be a single key (optionally with Shift)	araç kısayolları tek tuş olmalıdır (isteğe bağlı olarak Shift ile)
 @msg	truncated	kesik
 @msg	unknown command `{0}`	bilinmeyen komut `{0}`
+@msg	unknown command `{0}`; did you mean `{1}`?	bilinmeyen komut `{0}`; `{1}` mi demek istediniz?
 @msg	unknown effect `{id}`	bilinmeyen etki `{id}`
 @msg	unknown format	bilinmeyen format
 @msg	unknown format `{f}` (Save writes {_1})	bilinmeyen format `{f}` (Kaydet, {_1} yazar)
@@ -5367,7 +5367,6 @@ theme	Appearance	Görünüm
 @msg	thumbnail: no page {n} (the file has 1)	thumbnail: {n}. sayfa yok (dosyada 1 sayfa var)
 @msg	variables that aren't text were left out: {kinds}	metin olmayan değişkenler dışarıda bırakıldı: {kinds}
 	Collapse Panel Group	Panel Grubunu Daralt
-@msg	panel floats; collapse its group with window.panel.float {panel, collapsed}	panel kayan durumda; grubunu window.panel.float {panel, collapsed} ile daraltın
 @msg	panel is not in a dock group	panel bir yuva grubunda değil
 @msg	only a dock group above or below others collapses, not one beside another	yalnızca diğerlerinin üstünde veya altındaki bir yuva grubu daraltılabilir, yanındaki değil
 @msg	icon must be true or false	icon true veya false olmalı
@@ -5510,3 +5509,6 @@ axis	Y Axis	Y ekseni
 	Rectangular Grid Tool Options	Dikdörtgen Izgara Aracı Seçenekleri
 	Polar Grid Tool Options	Yuvarlak Izgara Aracı Seçenekleri
 	Fill Line	Çizgiyi doldur
+	Scale Presets	Ölçek ön ayarları
+@msg	a {width}×{height} screenshot's byte count overflows	{width}×{height} ekran görüntüsünün bayt sayısı taşıyor
+@msg	the window's {what} ({points} points × {scale} DPI) cannot size a screenshot	pencerenin {what} ({points} nokta × {scale} DPI) bir ekran görüntüsünü boyutlandıramaz

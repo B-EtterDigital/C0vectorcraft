@@ -83,14 +83,32 @@ struct App {
     maximize_tries: u8,
 }
 
+/// The parts of [`App::raw_input_hook`] that every window needs, for the OS windows of floating
+/// panels: a click or Escape that closes the macOS menu bar's open menu, and the pen barrel
+/// button's secondary click on Windows. The control channel's input and the native menu's keys
+/// go to the main window only.
+#[cfg(target_os = "macos")]
+fn native_input_hook(app: &VectorcraftApp) -> Option<vectorcraft_ui_egui::NativeInputHook> {
+    app.services.native_menu.is_some().then(|| std::sync::Arc::new(mac_menu::raw_input_hook) as vectorcraft_ui_egui::NativeInputHook)
+}
+#[cfg(all(windows, not(target_vendor = "win7")))]
+fn native_input_hook(_: &VectorcraftApp) -> Option<vectorcraft_ui_egui::NativeInputHook> {
+    Some(std::sync::Arc::new(windows_stylus::raw_input_hook))
+}
+#[cfg(not(any(target_os = "macos", all(windows, not(target_vendor = "win7")))))]
+fn native_input_hook(_: &VectorcraftApp) -> Option<vectorcraft_ui_egui::NativeInputHook> {
+    None
+}
+
 impl eframe::App for App {
     // Each frame runs unconfined: it is the person at the keyboard's. The app confines what the
     // control channel asks for, and the frames carrying input it injected, to the automation roots
     // (`VectorcraftApp::with_automation_roots`), which are in force elsewhere in the process.
     fn logic(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         file_access::unconfined(|| self.logic_frame(ctx, frame));
+        self.app.finish_ime_logic(ctx);
     }
-    fn raw_input_hook(&mut self, _ctx: &egui::Context, raw: &mut egui::RawInput) {
+    fn raw_input_hook(&mut self, ctx: &egui::Context, raw: &mut egui::RawInput) {
         // winit gives the window its caption back when it changes the window's flags (maximize,
         // restore, …): take it off again before the frame is laid out (#1758).
         if let Some(window_frame) = self.window_frame.as_mut() {
@@ -103,7 +121,7 @@ impl eframe::App for App {
         // A pen contact with the barrel button held presses the secondary button (Windows Ink).
         #[cfg(all(windows, not(target_vendor = "win7")))]
         windows_stylus::raw_input_hook(raw);
-        file_access::unconfined(|| self.app.raw_input_hook(raw));
+        file_access::unconfined(|| self.app.raw_input_hook(ctx, raw));
     }
     #[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
@@ -164,7 +182,7 @@ impl App {
             }
             open_files(&mut self.app, files);
         }
-        self.app.logic(ctx);
+        self.app.tick(ctx);
         if self.pending_maximize {
             if let Some(w) = &self.winit_window {
                 self.pending_maximize = window::apply_pending_maximize(w, true, &mut self.maximize_tries);
@@ -248,50 +266,57 @@ fn prefs_enabled() -> bool {
 }
 
 /// The saved UI preferences, read before the window opens (they hold its size and position).
+/// A file read only in part, or with layouts converted from an older version, is copied beside
+/// itself before anything saves over it.
 fn read_prefs() -> Option<vectorcraft_ui_egui::UiState> {
     if !prefs_enabled() {
         return None;
     }
-    let bytes = prefs_path().and_then(|p| std::fs::read(p).ok()).or_else(|| legacy_prefs_path().and_then(|p| std::fs::read(p).ok()))?;
+    if let Some(p) = prefs_path()
+        && let Ok(bytes) = std::fs::read(&p)
+    {
+        let read = vectorcraft_ui_egui::UiState::read_preferences(&bytes);
+        if read.as_ref().is_none_or(|read| !read.intact) {
+            keep_prefs_copy(&p, &bytes, "ui.unreadable");
+        }
+        if read.as_ref().is_some_and(|read| read.converted) {
+            keep_prefs_copy(&p, &bytes, "ui.before-layout-migration");
+        }
+        return read.map(|read| read.ui);
+    }
+    let bytes = legacy_prefs_path().and_then(|p| std::fs::read(p).ok())?;
     decode_saved_prefs(&bytes)
 }
 
-/// Recover only optional persisted docking metadata. Runtime UiState and command decoding
-/// remains strict, and an unreadable workspace layout cannot discard unrelated preferences.
+/// Saved preferences, with what this version cannot read of their docking data dropped and
+/// older layouts converted (`vectorcraft_ui_egui::layout_migration`).
 fn decode_saved_prefs(bytes: &[u8]) -> Option<vectorcraft_ui_egui::UiState> {
-    use serde_json::{Map, Value, json};
+    vectorcraft_ui_egui::UiState::read_preferences(bytes).map(|read| read.ui)
+}
 
-    fn recover(object: &mut Map<String, Value>, hidden_key: &str) {
-        if let Some(layout) = object.get("docking")
-            && serde_json::from_value::<vectorcraft_ui_egui::UiState>(json!({"docking": layout})).is_err()
-        {
-            object.remove("docking");
-        }
-        if let Some(hidden) = object.get_mut(hidden_key) {
-            if let Value::Object(entries) = hidden {
-                entries.retain(|panel, location| {
-                    serde_json::from_value::<vectorcraft_ui_egui::UiState>(json!({"docking_hidden": {panel: location}})).is_ok()
-                });
-            } else {
-                object.remove(hidden_key);
-            }
-        }
-    }
+/// Set when `ui.json` needed a copy kept ([`keep_prefs_copy`]) and none could be: the file is
+/// then left as it is rather than overwritten.
+static KEEP_UI_PREFS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-    let mut value: Value = serde_json::from_slice(bytes).ok()?;
-    let object = value.as_object_mut()?;
-    recover(object, "docking_hidden");
-    // Saved workspaces and the layout changes kept for each workspace carry the same layouts.
-    for key in ["custom_workspaces", "workspace_changes"] {
-        if let Some(Value::Array(workspaces)) = object.get_mut(key) {
-            for workspace in workspaces {
-                if let Some(object) = workspace.as_object_mut() {
-                    recover(object, "dockingHidden");
+/// Copy `ui.json` beside it as `<stem>.json` or the first free `<stem>-N.json`, before the next
+/// save replaces it: `ui.unreadable` when it could not be read in full (a newer VectorCraft may
+/// have written it), `ui.before-layout-migration` when its layouts were converted.
+fn keep_prefs_copy(path: &std::path::Path, bytes: &[u8], stem: &str) {
+    use std::io::Write as _;
+    for n in 1..100u32 {
+        let name = if n == 1 { format!("{stem}.json") } else { format!("{stem}-{n}.json") };
+        match std::fs::OpenOptions::new().write(true).create_new(true).open(path.with_file_name(name)) {
+            Ok(mut file) => {
+                if file.write_all(bytes).is_ok() {
+                    return;
                 }
+                break;
             }
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+            Err(_) => break,
         }
     }
-    serde_json::from_value(value).ok()
+    KEEP_UI_PREFS.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
 fn load_prefs(app: &mut VectorcraftApp, saved: Option<vectorcraft_ui_egui::UiState>) {
@@ -305,7 +330,7 @@ fn load_prefs(app: &mut VectorcraftApp, saved: Option<vectorcraft_ui_egui::UiSta
 }
 
 fn save_prefs(app: &VectorcraftApp) {
-    if !prefs_enabled() {
+    if !prefs_enabled() || KEEP_UI_PREFS.load(std::sync::atomic::Ordering::Relaxed) {
         return;
     }
     if let Some(p) = prefs_path() {
@@ -788,6 +813,11 @@ Without a window (converting, scripting, the MCP server), use vectorcraft-cli:
 ";
 
 fn main() -> std::process::ExitCode {
+    // Windows: the update helper is a copy of this program started with `--finish-update`.
+    #[cfg(windows)]
+    if let Some(result) = craft_update::self_update::finish(&craft_update::suite::VECTORCRAFT, &std::env::args_os().skip(1).collect::<Vec<_>>()) {
+        std::process::exit(i32::from(result.is_err()));
+    }
     // Before any thread starts: the pointer must find a cursor theme on Wayland (#2450).
     #[cfg(target_os = "linux")]
     cursor_theme::apply();
@@ -1014,11 +1044,13 @@ fn main() -> std::process::ExitCode {
         run(
             options,
             Box::new(move |cc| {
+                VectorcraftApp::install_ime_reset_hooks(&cc.egui_ctx);
                 let mut session = Session::new();
                 // The profiles loaded before come back before the preferences name any of them.
                 prefs_dir::attach_profile_store(&mut session);
                 prefs_dir::attach_plugin_store(&mut session);
                 let mut app = VectorcraftApp::new(session, services(cc.winit_window().cloned(), cc.egui_ctx.clone()));
+                app.set_startup_update_check(true);
                 load_prefs(&mut app, saved);
                 // The saved PDF presets live in their own folder (also read by vectorcraft-cli),
                 // which takes over from the copy the preferences file used to hold.
@@ -1109,6 +1141,7 @@ fn main() -> std::process::ExitCode {
                 }
                 #[cfg(not(target_os = "macos"))]
                 let _ = in_window_menus;
+                app.services.native_input_hook = native_input_hook(&app);
                 file_access::unconfined(|| open_files(&mut app, files));
                 // The first frame is due from now (`gpu::watch_first_frame`).
                 #[cfg(feature = "wgpu")]
@@ -1147,6 +1180,38 @@ mod tests {
 
     fn ui_state_with_prefs(engine_prefs: serde_json::Value) -> vectorcraft_ui_egui::UiState {
         vectorcraft_ui_egui::UiState { engine_prefs, ..Default::default() }
+    }
+
+    /// Shortcut overrides an earlier version saved still load: its spellings, `panel:` keys, an
+    /// override that can't fire (#487), an entry for a command this version lacks, and an old set
+    /// name.
+    #[test]
+    fn shortcut_overrides_from_an_earlier_version_load() {
+        use serde_json::json;
+        use vectorcraft_ui_egui::{keymap, shortcut_editor};
+        let mut raw = serde_json::to_value(vectorcraft_ui_egui::UiState::default()).unwrap();
+        raw["shortcut_overrides"] = json!({
+            "tool:pen": "Shift+9",
+            "edit.preferences": "",
+            "panel:layers": "Cmd+Alt+Shift+F7",
+            "tool:groupSelection": "Shift+ShiftLeft",
+            "test.unknown": "Cmd+Alt+Shift+F9",
+            "view.grid": "Cmd+Period",
+        });
+        raw["shortcut_set"] = json!(shortcut_editor::LEGACY_PRESETS[0].0);
+        let ui = decode_saved_prefs(&serde_json::to_vec(&raw).unwrap()).unwrap().sanitized();
+        assert_eq!(ui.shortcut_set, shortcut_editor::LEGACY_PRESETS[0].1);
+        let km = keymap::keymap_with(&ui.shortcut_overrides);
+        let text = |key: &str| keymap::effective_with(&km, key);
+        assert_eq!(text("tool:pen").as_deref(), Some("Shift+9"));
+        assert_eq!(text("edit.preferences"), None);
+        assert_eq!(text("panel:layers").as_deref(), Some("Cmd+Alt+Shift+F7"));
+        assert_eq!(text("tool:groupSelection").as_deref(), shortcut_editor::default_of("tool:groupSelection"), "back on its default");
+        assert_eq!(text("view.grid").as_deref(), Some("Cmd+Period"));
+        let period = keymap::vc_chord("Cmd+.").unwrap();
+        assert_eq!(keymap::lookup(&km, &period).map(|c| c.id), Some("view.grid".to_string()));
+        assert_eq!(text("test.unknown").as_deref(), Some("Cmd+Alt+Shift+F9"), "kept");
+        assert!(km.problems().iter().any(|p| format!("{p:?}") == r#"UnknownCommand { key: "test.unknown" }"#), "reported");
     }
 
     #[test]
@@ -1208,6 +1273,25 @@ mod tests {
             decode_saved_prefs(&serde_json::to_vec(&json!({"toolbar":"invalid"})).unwrap()).is_none(),
             "unrelated fields retain normal strict parsing"
         );
+    }
+
+    #[test]
+    fn an_unreadable_ui_json_is_kept_beside_it() {
+        let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos();
+        let dir = std::env::temp_dir().join(format!("vectorcraft-ui-prefs-{}-{stamp}", std::process::id()));
+        std::fs::create_dir(&dir).unwrap();
+        let path = dir.join("ui.json");
+        super::keep_prefs_copy(&path, b"{\"docking\": {\"root\": {\"FutureNode\": {}}}}", "ui.unreadable");
+        super::keep_prefs_copy(&path, b"not json", "ui.unreadable");
+        super::keep_prefs_copy(&path, b"{}", "ui.before-layout-migration");
+        let first = std::fs::read(dir.join("ui.unreadable.json")).unwrap();
+        let second = std::fs::read(dir.join("ui.unreadable-2.json")).unwrap();
+        let before = std::fs::read(dir.join("ui.before-layout-migration.json")).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+        assert!(first.starts_with(b"{\"docking\""), "the first copy is not replaced");
+        assert_eq!(second, b"not json");
+        assert_eq!(before, b"{}");
+        assert!(!super::KEEP_UI_PREFS.load(std::sync::atomic::Ordering::Relaxed), "ui.json can be saved once a copy is kept");
     }
 
     #[test]
