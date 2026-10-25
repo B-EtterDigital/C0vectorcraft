@@ -17,22 +17,24 @@ pub const KEYS: &[&str] = &[
 ];
 
 /// Where the floating Tools palette appears when the host floats it: the app's own default for
-/// `window.panel.float` on the tools (`floating::TOOLS_AT`), in screen points.
+/// `window.panel.float` on the tools (`tools_float::TOOLS_AT`), in screen points.
 const FLOAT_AT: [f32; 2] = [60.0, 120.0];
 
-/// The dock folded to its icon strip. Like `window.collapseDock`, except that it leaves the
-/// `dock` switch alone, so the two keys do not depend on the order they arrive in.
-fn fold_dock(app: &mut VectorcraftApp, folded: bool) {
+/// The dock folded to its icon strip. Runs the app's own `window.collapseDock` (craft-ui's
+/// shared docking since upstream #4135), except that it leaves the `dock` switch alone, so the
+/// two keys do not depend on the order they arrive in. A refused layout change is `invalid`.
+fn fold_dock(app: &mut VectorcraftApp, folded: bool) -> Result<(), String> {
     let shown = app.ui.dock;
-    crate::dock::set_collapsed(app, folded);
+    let result = crate::panel_docking::collapse_dock(app, Some(folded)).map(|_| ());
     app.ui.dock = shown;
+    result
 }
 
 pub fn snapshot(app: &VectorcraftApp) -> Value {
     json!({"app_bar":app.c0.chrome.app_bar, "start_screen":app.c0.chrome.start_screen,
         "community_links":app.c0.chrome.community_links, "toolbar":app.ui.toolbar,
         "toolbar_double":app.ui.toolbar_double, "toolbar_floating":app.ui.toolbar_pos.is_some(),
-        "right_dock_collapsed":app.ui.dock_collapsed,
+        "right_dock_collapsed":crate::panel_docking::dock_collapsed(&app.ui),
         "control_bar":app.ui.control_bar, "task_bar":app.ui.task_bar, "dock":app.ui.dock,
         "status_bar":app.ui.status_bar, "rulers":app.ui.view.rulers})
 }
@@ -71,7 +73,12 @@ pub fn set(app: &mut VectorcraftApp, ctx: &egui::Context, params: &Value) -> Val
                             // Floating keeps a position the user already dragged it to.
                             app.ui.toolbar_pos = if on { app.ui.toolbar_pos.or(Some(FLOAT_AT)) } else { None };
                         }
-                        "right_dock_collapsed" => fold_dock(app, on),
+                        "right_dock_collapsed" => {
+                            if fold_dock(app, on).is_err() {
+                                invalid.push(path);
+                                continue;
+                            }
+                        }
                         "control_bar" => app.ui.control_bar = on,
                         "task_bar" => app.ui.task_bar = on,
                         "dock" => app.ui.dock = on,
