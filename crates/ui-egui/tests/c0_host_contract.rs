@@ -265,3 +265,161 @@ fn settings_report_every_applied_unknown_and_invalid_path() {
     assert_eq!(call(&mut app, &ctx, "c0.set", json!([]))["ok"], false);
     assert_eq!(call(&mut app, &ctx, "c0.documentBytes", json!({}))["ok"], false);
 }
+
+// ---------- c0.selection and c0.place (AI actions) ----------
+
+const SVG_ART: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="300" height="100"><rect x="0" y="0" width="300" height="100" fill="#28a"/><circle cx="50" cy="50" r="20" fill="#e33"/></svg>"##;
+
+fn png_dims(b64: &str) -> (u32, u32) {
+    let b = vectorcraft_format::base64_decode(b64).unwrap();
+    assert_eq!(&b[..8], &[0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a]);
+    (u32::from_be_bytes(b[16..20].try_into().unwrap()), u32::from_be_bytes(b[20..24].try_into().unwrap()))
+}
+fn steps(app: &VectorcraftApp) -> usize {
+    app.session.active().unwrap().history.undo.len()
+}
+fn layer_ids(app: &mut VectorcraftApp, ctx: &egui::Context) -> Vec<u64> {
+    ok(app, ctx, "c0.inspect", json!({}))["layers"].as_array().unwrap().iter().map(|l| l["id"].as_u64().unwrap()).collect()
+}
+
+#[test]
+fn selection_without_a_selection_is_the_whole_artboard_and_changes_nothing() {
+    let (mut app, ctx) = (app(), egui::Context::default());
+    new(&mut app);
+    dirty(&mut app);
+    app.run("select.none", json!({})).unwrap();
+    let (before, revision) = (steps(&app), app.session.active().unwrap().revision);
+    let v = ok(&mut app, &ctx, "c0.selection", json!({}));
+    assert_eq!(v["kind"], "artboard");
+    assert_eq!(v["artboard"]["index"], 0);
+    assert_eq!(v["artboard"]["width"], 120.0);
+    assert_eq!(v["artboard"]["height"], 80.0);
+    assert_eq!(v["selectedCount"], 0);
+    assert_eq!(v["selectedNames"], json!([]));
+    let (w, h) = png_dims(v["png"].as_str().unwrap());
+    assert!(w.max(h) <= 1536 && w > 0 && h > 0);
+    assert_eq!((steps(&app), app.session.active().unwrap().revision), (before, revision));
+}
+
+#[test]
+fn selection_with_objects_is_their_picture_and_names() {
+    let (mut app, ctx) = (app(), egui::Context::default());
+    new(&mut app);
+    app.run("shape.rectangle", json!({"x":10,"y":10,"width":40,"height":20})).unwrap();
+    let v = ok(&mut app, &ctx, "c0.selection", json!({}));
+    assert_eq!(v["selectedCount"], 1);
+    assert_eq!(v["selectedNames"].as_array().unwrap().len(), 1);
+    assert!(v["selectedNames"][0].as_str().is_some_and(|n| !n.is_empty()));
+    let (w, h) = png_dims(v["png"].as_str().unwrap());
+    // The selection alone: 40 x 20 pt, not the 120 x 80 artboard (same aspect, up to the stroke).
+    assert!(w > h && w * 3 < h * 8, "{w}x{h}");
+}
+
+#[test]
+fn selection_picture_is_capped_on_a_huge_artboard() {
+    let (mut app, ctx) = (app(), egui::Context::default());
+    app.run("file.new", json!({"width":6000,"height":3000})).unwrap();
+    app.run("select.none", json!({})).unwrap();
+    let (w, h) = png_dims(ok(&mut app, &ctx, "c0.selection", json!({}))["png"].as_str().unwrap());
+    assert!(w.max(h) <= 1536 && w.max(h) > 1000, "{w}x{h}");
+}
+
+#[test]
+fn selection_without_a_document_is_a_plain_error() {
+    let (mut app, ctx) = (app(), egui::Context::default());
+    let r = call(&mut app, &ctx, "c0.selection", json!({}));
+    assert_eq!(r["ok"], false);
+    assert!(r["error"].as_str().unwrap().contains("no document"));
+}
+
+fn place_is_one_undo_step(kind: &str, payload: String) {
+    let (mut app, ctx) = (app(), egui::Context::default());
+    new(&mut app);
+    dirty(&mut app);
+    app.session.active_mut().unwrap().history = Default::default();
+    app.session.active_mut().unwrap().history.limit = 100;
+    let layers = layer_ids(&mut app, &ctx);
+    let v = ok(&mut app, &ctx, "c0.place", json!({kind: payload, "name": "AI result"}));
+    assert_eq!(v["ok"], true);
+    assert_eq!(v["placed"], kind);
+    let layer = v["layerId"].as_u64().unwrap();
+    assert!(v["id"].is_u64());
+    assert!(!layers.contains(&layer));
+    assert_eq!(steps(&app), 1, "one undo step");
+    let st = app.session.active().unwrap();
+    assert!(st.is_dirty());
+    // Fitted inside the 120 x 80 artboard and centred on it.
+    let b = st.doc.node(vectorcraft_doc::NodeId(v["id"].as_u64().unwrap())).unwrap().geometric_bounds_with(&st.doc.symbol_boxes()).unwrap();
+    assert!(b.width() <= 120.01 && b.height() <= 80.01, "{b:?}");
+    assert!((b.center().x - 60.0).abs() < 0.5 && (b.center().y - 40.0).abs() < 0.5, "{b:?}");
+    assert_eq!(st.doc.layer_of(vectorcraft_doc::NodeId(v["id"].as_u64().unwrap())), Some(vectorcraft_doc::NodeId(layer)));
+    app.run("edit.undo", json!({})).unwrap();
+    assert_eq!(layer_ids(&mut app, &ctx), layers, "one Ctrl+Z removes the whole placement");
+    app.run("edit.redo", json!({})).unwrap();
+    assert!(layer_ids(&mut app, &ctx).contains(&layer));
+}
+
+#[test]
+fn place_svg_is_editable_art_in_a_new_layer_as_one_undo_step() {
+    place_is_one_undo_step("svg", SVG_ART.to_owned());
+}
+
+#[test]
+fn place_png_is_a_fitted_picture_as_one_undo_step() {
+    let (mut other, ctx) = (app(), egui::Context::default());
+    new(&mut other);
+    let png = ok(&mut other, &ctx, "c0.selection", json!({}))["png"].as_str().unwrap().to_owned();
+    place_is_one_undo_step("png", png);
+}
+
+#[test]
+fn place_jpeg_is_a_fitted_picture_as_one_undo_step() {
+    let mut other = app();
+    new(&mut other);
+    other.run("shape.rectangle", json!({"x":1,"y":2,"width":50,"height":60})).unwrap();
+    let jpg = other.run("document.export", json!({"format":"jpg"})).unwrap()["dataBase64"].as_str().unwrap().to_owned();
+    place_is_one_undo_step("jpeg", jpg);
+}
+
+#[test]
+fn place_svg_makes_paths_not_a_picture() {
+    let (mut app, ctx) = (app(), egui::Context::default());
+    new(&mut app);
+    let v = ok(&mut app, &ctx, "c0.place", json!({"svg": SVG_ART, "name": "logo"}));
+    let st = app.session.active().unwrap();
+    let node = st.doc.node(vectorcraft_doc::NodeId(v["id"].as_u64().unwrap())).unwrap();
+    assert!(!matches!(node.kind, vectorcraft_doc::NodeKind::Image(_)));
+    assert!(node.children().is_some_and(|c| c.len() >= 2), "editable shapes");
+}
+
+#[test]
+fn place_rejects_bad_params_with_a_plain_message_and_changes_nothing() {
+    let (mut app, ctx) = (app(), egui::Context::default());
+    assert_eq!(call(&mut app, &ctx, "c0.place", json!({"svg": SVG_ART, "name": "x"}))["ok"], false, "no document");
+    new(&mut app);
+    dirty(&mut app);
+    let (doc, before) = (app.session.active().unwrap().doc.clone(), steps(&app));
+    let huge = "A".repeat(60 * 1024 * 1024);
+    for p in [
+        json!({}),
+        json!({"name": "x"}),
+        json!({"svg": SVG_ART}),
+        json!({"svg": SVG_ART, "name": ""}),
+        json!({"svg": SVG_ART, "name": "a/b"}),
+        json!({"svg": 4, "name": "x"}),
+        json!({"svg": "not markup", "name": "x"}),
+        json!({"svg": SVG_ART, "png": "AAAA", "name": "x"}),
+        json!({"png": "!!!", "name": "x"}),
+        json!({"png": "AAAA", "name": "x"}),
+        json!({"jpeg": "AAAA", "name": "x"}),
+        json!({"png": huge, "name": "x"}),
+        json!({"svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"0\" height=\"0\"></svg>", "name": "x"}),
+    ] {
+        let r = call(&mut app, &ctx, "c0.place", p.clone());
+        assert_eq!(r["ok"], false, "{p:.80}");
+        assert!(r["error"].as_str().is_some_and(|e| !e.is_empty()));
+        let st = app.session.active().unwrap();
+        assert!(std::sync::Arc::ptr_eq(&st.doc, &doc), "{p:.80}");
+        assert_eq!(steps(&app), before, "{p:.80}");
+    }
+}

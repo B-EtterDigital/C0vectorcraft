@@ -13,7 +13,7 @@ fn app() -> VectorcraftApp {
 #[test]
 fn parameter_type_sweep_preserves_unsaved_work() {
     let values = [Value::Null, json!(true), json!(-1), json!(u64::MAX), json!("\0é"), json!([]), json!({}), json!([{}, null])];
-    for method in ["c0.inspect", "c0.set", "c0.goTo", "c0.documentBytes", "c0.openFile", "c0.newDocument", "c0.cancelFileDialog"] {
+    for method in ["c0.inspect", "c0.set", "c0.goTo", "c0.documentBytes", "c0.openFile", "c0.newDocument", "c0.cancelFileDialog", "c0.selection", "c0.place"] {
         for value in &values {
             let mut app = app();
             let uid = app.session.active().unwrap().uid;
@@ -21,7 +21,7 @@ fn parameter_type_sweep_preserves_unsaved_work() {
             let ctx = egui::Context::default();
             for params in [
                 value.clone(),
-                json!({"name":value,"bytes":value,"format":value,"template":value,"artboard":value,"layer":value,"panels":value,"themeTokens":value}),
+                json!({"name":value,"bytes":value,"format":value,"template":value,"artboard":value,"layer":value,"panels":value,"themeTokens":value,"svg":value,"png":value,"jpeg":value}),
             ] {
                 let (request, _) = ControlRequest::new(method, params);
                 let control::Outcome::Done(reply) = control::handle(&mut app, &ctx, &request) else { panic!("host handler deferred presentation") };

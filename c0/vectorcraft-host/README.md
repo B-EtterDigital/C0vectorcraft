@@ -69,6 +69,8 @@ an error envelope or `{cancelled:true}`. It resets when another replacement begi
 | `c0.newDocument` | `{template?:presetName}` | Upstream `file.new` result or `{pending:"saveChanges"}` |
 | `c0.cancelFileDialog` | `{}` | `{cancelled:boolean}` |
 | `c0.set` | `{themeTokens?,panels?}` | `{applied:string[],unknown:string[],invalid:string[]}` |
+| `c0.selection` | `{}` | `{kind:"artboard",artboard:{index,name,width,height},selectedCount,selectedNames:string[],png}`; `png` is base64, the selection alone or the whole active artboard when nothing is selected, longest side at most 1536 px, on white. Error without a document |
+| `c0.place` | exactly one of `{svg,name}` (SVG markup), `{png,name}`, `{jpeg,name}` (base64) | `{ok:true,placed:"svg"\|"png"\|"jpeg",layerId,id,name,width,height,warnings}`; a new layer holding the editable paths (svg) or the picture, fitted and centred on the active artboard; one undo step, document dirty; over 40 MB or invalid input is a plain error and nothing changes |
 
 `c0.inspect` includes `title`, `revision`, `dirty`, `canUndo`, `canRedo`, `panes` (the panel-key
 map), `theme:{dark,overrides}`, `artboards:[{index,name,width,height,active}]`,

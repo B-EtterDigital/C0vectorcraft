@@ -2,9 +2,11 @@
 use crate::VectorcraftApp;
 use serde_json::{Value, json};
 
+mod c0_ai;
 mod c0_files;
 mod c0_panels;
 mod c0_state;
+pub use c0_ai::{MAX_PICTURE_BYTES, MAX_SELECTION_SIDE};
 pub use c0_files::{begin_picker, picker_pending};
 
 pub const MAX_FILE_BYTES: usize = 72 * 1024 * 1024;
@@ -55,6 +57,8 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context, method: &str, param
         "c0.openFile" => c0_files::open(app, ctx, params),
         "c0.newDocument" => c0_files::new_document(app, ctx, params),
         "c0.cancelFileDialog" => Ok(c0_files::cancel(app, ctx)),
+        "c0.selection" => c0_ai::selection(app),
+        "c0.place" => c0_ai::place(app, params),
         "c0.set" => Ok(c0_panels::set(app, ctx, params)),
         _ => Err(format!("unknown host method `{method}`")),
     }
