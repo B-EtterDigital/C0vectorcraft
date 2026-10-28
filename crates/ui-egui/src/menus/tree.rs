@@ -165,7 +165,12 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
                 c("Ungroup", "object.ungroup"),
                 sub(
                     "Lock",
-                    vec![c("Selection", "object.lock"), c("All Artwork Above", "object.lock.above"), c("Other Layers", "object.lock.otherLayers")],
+                    vec![
+                        c("Selection", "object.lock"),
+                        c("All Artwork Above", "object.lock.above"),
+                        c("Other Layers", "object.lock.otherLayers"),
+                        c("Unselected Artwork", "object.lock.unselected"),
+                    ],
                 ),
                 c("Unlock All", "object.unlockAll"),
                 sub(

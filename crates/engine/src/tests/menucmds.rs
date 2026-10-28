@@ -650,6 +650,96 @@ fn hide_unselected_artwork_keeps_groups_with_locked_guides_and_the_selected_laye
     assert_eq!(selected(&s), [other]);
 }
 
+/// Lock › Unselected Artwork locks, in one undo step labeled "Lock", each object that is not selected and holds no
+/// selected object: here `b`, the member `n` of the group that holds the selected `m`, and `p` on another layer. The
+/// selected objects, that group, the clip group that holds the selected `c2` with all its members, an object hidden
+/// before and the art on a locked layer stay unlocked, and the selection stays as it is. Unlock All unlocks them again
+/// with the object locked before, and selects them.
+#[test]
+fn lock_unselected_artwork_locks_every_object_that_is_not_selected() {
+    let mut s = session();
+    let a = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
+    let b = rect(&mut s, 20.0, 0.0, 10.0, 10.0);
+    let m = rect(&mut s, 40.0, 0.0, 10.0, 10.0);
+    let n = rect(&mut s, 60.0, 0.0, 10.0, 10.0);
+    sel(&mut s, &[m, n]);
+    let g = id_of(&s.execute("object.group", &json!({})).unwrap());
+    let c1 = rect(&mut s, 80.0, 0.0, 10.0, 10.0);
+    let c2 = rect(&mut s, 85.0, 5.0, 10.0, 10.0);
+    let c3 = rect(&mut s, 80.0, 0.0, 30.0, 30.0);
+    sel(&mut s, &[c1, c2, c3]);
+    let clip = id_of(&s.execute("object.clippingMask.make", &json!({})).unwrap());
+    let k = rect(&mut s, 120.0, 0.0, 10.0, 10.0);
+    s.execute("layer.setProps", &json!({"id": k.0, "locked": true})).unwrap();
+    let h = rect(&mut s, 140.0, 0.0, 10.0, 10.0);
+    s.execute("layer.setProps", &json!({"id": h.0, "visible": false})).unwrap();
+    s.execute("layer.new", &json!({})).unwrap();
+    let p = rect(&mut s, 0.0, 100.0, 10.0, 10.0);
+    let locked_layer = id_of(&s.execute("layer.new", &json!({})).unwrap());
+    let q = rect(&mut s, 20.0, 100.0, 10.0, 10.0);
+    s.execute("layer.setProps", &json!({"id": locked_layer.0, "locked": true})).unwrap();
+    let locked = |s: &Session, ids: &[NodeId]| ids.iter().map(|id| node(s, *id).locked).collect::<Vec<_>>();
+    sel(&mut s, &[a, m, c2]);
+    let steps = undo_len(&s);
+    assert_eq!(s.execute("object.lock.unselected", &json!({})).unwrap(), json!({"count": 3}));
+    assert_eq!(locked(&s, &[b, n, p, k]), [true; 4]);
+    assert_eq!(locked(&s, &[a, m, g, c1, c2, c3, clip, h, q]), [false; 9]);
+    assert_eq!((undo_len(&s), selected(&s)), (steps + 1, vec![a, m, c2]));
+    assert_eq!(s.doc().unwrap().history.undo.last().unwrap().label, "Lock");
+    s.execute("edit.undo", &json!({})).unwrap();
+    assert_eq!(locked(&s, &[b, n, p]), [false; 3]);
+    s.execute("edit.redo", &json!({})).unwrap();
+    assert_eq!(locked(&s, &[b, n, p]), [true; 3]);
+    assert_eq!(s.execute("object.unlockAll", &json!({})).unwrap(), json!({"count": 4}));
+    assert_eq!(locked(&s, &[b, n, p, k]), [false; 4]);
+    let mut unlocked = selected(&s);
+    unlocked.sort();
+    let mut want = vec![b, n, p, k];
+    want.sort();
+    assert_eq!(unlocked, want);
+}
+
+/// In isolation mode Lock › Unselected Artwork is disabled: the menu item is off, and the command returns an error that
+/// names isolation mode and changes nothing. While Lock Guides is on it leaves the guides unlocked. With nothing left to
+/// lock it records no undo step and returns a count of 0. With Lock Guides off it locks a guide path like other art.
+#[test]
+fn lock_unselected_artwork_keeps_locked_guides_and_is_disabled_in_isolation_mode() {
+    let mut s = session();
+    let guide = rect(&mut s, 0.0, 0.0, 10.0, 10.0);
+    sel(&mut s, &[guide]);
+    s.execute("view.guides.make", &json!({})).unwrap();
+    s.execute("view.guides.lock", &json!({"locked": true})).unwrap();
+    let out = rect(&mut s, 20.0, 0.0, 10.0, 10.0);
+    let m = rect(&mut s, 40.0, 0.0, 10.0, 10.0);
+    let n = rect(&mut s, 60.0, 0.0, 10.0, 10.0);
+    sel(&mut s, &[m, n]);
+    let g = id_of(&s.execute("object.group", &json!({})).unwrap());
+    let lock = |s: &mut Session| s.execute("object.lock.unselected", &json!({})).unwrap();
+    let locked = |s: &Session, ids: &[NodeId]| ids.iter().map(|id| node(s, *id).locked).collect::<Vec<_>>();
+    s.execute("object.isolate", &json!({"id": g.0})).unwrap();
+    select_with_a_step_to_redo(&mut s, &[m]);
+    let before = history(&s);
+    let info = find_command("object.lock.unselected").unwrap().info(&s);
+    assert!(!info.enabled && info.disabled_reason.as_deref() == Some("exit isolation mode first"), "{info:?}");
+    let e = s.execute("object.lock.unselected", &json!({})).unwrap_err();
+    assert!(matches!(e, EngineError::Disabled(..)) && e.to_string().contains("isolation mode"), "{e}");
+    assert_eq!(locked(&s, &[m, n, out, guide]), [false; 4]);
+    assert_eq!((history(&s), selected(&s)), (before, vec![m]));
+    s.execute("object.exitIsolation", &json!({})).unwrap();
+    sel(&mut s, &[m]);
+    assert!(find_command("object.lock.unselected").unwrap().info(&s).enabled);
+    assert_eq!(lock(&mut s), json!({"count": 2}));
+    assert_eq!(locked(&s, &[n, out, guide, g, m]), [true, true, false, false, false]);
+    select_with_a_step_to_redo(&mut s, &[m]);
+    let before = history(&s);
+    assert_eq!(lock(&mut s), json!({"count": 0}));
+    assert_eq!(history(&s), before);
+    s.execute("view.guides.lock", &json!({"locked": false})).unwrap();
+    sel(&mut s, &[m]);
+    assert_eq!(lock(&mut s), json!({"count": 1}));
+    assert_eq!(locked(&s, &[guide]), [true]);
+}
+
 // ---------- Transform Each ----------
 
 #[test]

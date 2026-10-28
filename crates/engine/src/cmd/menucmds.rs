@@ -57,6 +57,15 @@ pub fn specs() -> Vec<CommandSpec> {
             |s, _| other_layers(s, true)
         ),
         cmd!(
+            "object.lock.unselected",
+            "Unselected Artwork",
+            ["Object", "Lock"],
+            Some("Cmd+Alt+Shift+2"),
+            "{} lock, in one undo step, every object select.all takes that is not selected and holds no selected object; in a group that holds one it locks the other members one by one, and a clip group, compound path or other object that holds one stays as it is; the objects of a selected layer count as selected; while Lock Guides is on, guide paths count as selected and stay as they are; object.unlockAll unlocks them again; disabled in isolation mode → {count}",
+            has_selection_outside_isolation,
+            |s, _| unselected_art(s, true)
+        ),
+        cmd!(
             "object.hide.above",
             "All Artwork Above",
             ["Object", "Hide"],
@@ -81,7 +90,7 @@ pub fn specs() -> Vec<CommandSpec> {
             Some("Cmd+Alt+Shift+3"),
             "{} hide, in one undo step, every object select.all takes that is not selected and holds no selected object; in a group that holds one it hides the other members one by one, and a clip group, compound path or other object that holds one stays as it is; the objects of a selected layer count as selected; while Lock Guides is on, guide paths count as selected and stay as they are; object.showAll shows them again; disabled in isolation mode → {count}",
             has_selection_outside_isolation,
-            hide_unselected
+            |s, _| unselected_art(s, false)
         ),
         cmd!(
             "object.transformEach",
@@ -349,19 +358,23 @@ fn unselected(d: &vectorcraft_doc::Document, iso: Option<NodeId>, selection: &[N
     out
 }
 
-fn hide_unselected(s: &mut Session, _: &Value) -> Result<Value> {
+fn unselected_art(s: &mut Session, lock: bool) -> Result<Value> {
     let roots = selected_roots_to_transform(s)?;
     let guides_locked = s.menu.guides_locked;
     let st = s.doc()?;
     let ids = unselected(&st.doc, st.isolation, &st.selection.objects, &roots, guides_locked);
-    // With nothing to hide, the document and its undo history stay as they are.
+    // With nothing to lock (Lock) or hide (Hide), the document and its undo history stay as they are.
     if !ids.is_empty() {
-        s.edit("Hide", |d, _| {
-            // Hiding moves no node in the tree, so the paths found up front stay right.
+        s.edit(if lock { "Lock" } else { "Hide" }, |d, _| {
+            // Locking and hiding move no node in the tree, so the paths found up front stay right.
             let paths = d.index_paths(ids.iter().copied());
             for id in &ids {
                 if let Some(n) = paths.get(id).and_then(|p| d.node_mut_at(p)) {
-                    n.visible = false;
+                    if lock {
+                        n.locked = true;
+                    } else {
+                        n.visible = false;
+                    }
                 }
             }
             Ok(())

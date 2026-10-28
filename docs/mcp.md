@@ -1398,6 +1398,12 @@ selected. While Lock Guides is on, the guide paths count as selected and stay as
 hide it records no undo step. In isolation mode the menu item is disabled, and the command returns the error "exit
 isolation mode first" and changes nothing.
 
+`object.lock.unselected` (Object › Lock › Unselected Artwork, Cmd+Alt+Shift+2) locks, in one undo step, the objects
+that `object.hide.unselected` hides, and returns `{count}`. Hidden objects stay unlocked. The selection stays as it
+is, and `object.unlockAll` unlocks the objects again and selects them. With nothing to lock it records no undo step.
+In isolation mode the menu item is disabled, and the command returns the error "exit isolation mode first" and
+changes nothing.
+
 These Select menu commands select only the objects that `select.all` selects and the objects inside them: every
 `select.same.*` and `select.object.*` command except `select.object.slices`, `select.nextAbove`, `select.nextBelow`
 and `select.recall`. They leave out hidden and locked objects with the objects inside them, the objects on hidden,
