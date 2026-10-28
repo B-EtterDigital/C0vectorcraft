@@ -98,7 +98,7 @@ fn rendered_home_about_and_credits_keep_names_without_promotions() {
             assert!(!text.contains(banned), "{banned}: {text}");
         }
     }
-    ctx.data_mut(|d| d.insert_temp(egui::Id::new("about_tab"), 1u8));
+    ctx.data_mut(|d| d.insert_temp(egui::Id::unique("about_tab"), 1u8));
     let credits = render(&mut app, &ctx);
     assert!(credits.contains("Contributors"));
     for banned in ["https://github.com", "Discord", "getartcraft"] {

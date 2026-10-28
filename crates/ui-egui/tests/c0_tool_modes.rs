@@ -28,7 +28,7 @@ fn frames(app: &mut VectorcraftApp, ctx: &egui::Context) {
     }
 }
 fn floating_rect(ctx: &egui::Context) -> Option<egui::Rect> {
-    ctx.memory(|m| m.area_rect(egui::Id::new("toolbar-floating")))
+    ctx.memory(|m| m.area_rect(egui::Id::unique("toolbar-floating")))
 }
 
 #[test]
