@@ -6,11 +6,11 @@ use std::collections::BTreeMap;
 
 type Overrides = BTreeMap<String, Color32>;
 fn id() -> egui::Id {
-    egui::Id::new("vectorcraft-host-theme")
+    egui::Id::unique("vectorcraft-host-theme")
 }
 
 fn canvas_id() -> egui::Id {
-    egui::Id::new("vectorcraft-host-canvas-preference")
+    egui::Id::unique("vectorcraft-host-canvas-preference")
 }
 
 /// Remember the native preference, retaining the original preference application behaviour.

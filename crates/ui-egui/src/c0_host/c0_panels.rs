@@ -24,7 +24,7 @@ const FLOAT_AT: [f32; 2] = [60.0, 120.0];
 /// `dock` switch alone, so the two keys do not depend on the order they arrive in.
 fn fold_dock(app: &mut VectorcraftApp, folded: bool) {
     let shown = app.ui.dock;
-    crate::dock::set_collapsed(app, folded);
+    crate::panel_docking::collapse_dock(app, Some(folded)).ok();
     app.ui.dock = shown;
 }
 

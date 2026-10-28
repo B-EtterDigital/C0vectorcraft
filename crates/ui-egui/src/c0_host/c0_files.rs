@@ -133,7 +133,7 @@ pub fn tick(app: &mut VectorcraftApp) {
 }
 
 fn picker_id() -> egui::Id {
-    egui::Id::new("vectorcraft-host-picker")
+    egui::Id::unique("vectorcraft-host-picker")
 }
 pub fn begin_picker(ctx: &egui::Context) -> Arc<AtomicBool> {
     cancel_picker(ctx);
