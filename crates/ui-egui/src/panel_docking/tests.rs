@@ -532,6 +532,7 @@ fn f7_activates_a_background_tab_before_hiding_it() {
     let mut h = Harness::new();
     h.app.run("window.panel.move", json!({"panel": "layers", "anchor": "properties"})).unwrap();
     h.app.run("window.panel.activate", json!({"panel": "properties"})).unwrap();
+    let before = group_of(&h.layout(), &"layers".into());
     assert!(!showing(&h.app.ui, "layers"));
     h.press(egui::Key::F7, egui::Modifiers::NONE);
     assert!(showing(&h.app.ui, "layers"));
@@ -539,7 +540,7 @@ fn f7_activates_a_background_tab_before_hiding_it() {
     assert!(["properties", "layers", "libraries"].iter().all(|panel| !h.layout().contains(&panel.to_string())));
     h.press(egui::Key::F7, egui::Modifiers::NONE);
     assert!(showing(&h.app.ui, "layers"));
-    assert_eq!(group_of(&h.layout(), &"layers".into()), vec!["properties".to_string(), "layers".into(), "libraries".into()]);
+    assert_eq!(group_of(&h.layout(), &"layers".into()), before);
 }
 
 #[test]
@@ -555,6 +556,41 @@ fn f7_hides_and_restores_the_whole_expanded_group() {
     h.app.run("window.panel", json!({"panel": "properties", "toggle": true})).unwrap();
     assert_eq!(group_of(&h.layout(), &"properties".into()), ["properties", "layers", "libraries"]);
     assert!(showing(&h.app.ui, "properties"));
+}
+
+#[test]
+fn f7_restores_only_tabs_hidden_with_the_group() {
+    let mut h = Harness::new();
+    h.app.run("window.panel.close", json!({"panel": "libraries"})).unwrap();
+    assert!(h.app.ui.docking_hidden.contains_key("libraries"));
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    assert!(["properties", "layers"].iter().all(|panel| h.app.ui.docking_hidden.contains_key(*panel)));
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    assert_eq!(group_of(&h.layout(), &"layers".into()), ["properties", "layers"]);
+    assert!(!h.layout().contains(&"libraries".to_string()));
+    assert!(showing(&h.app.ui, "layers"));
+}
+
+#[test]
+fn independently_reopened_tab_is_not_restored_by_the_group_key() {
+    let mut h = Harness::new();
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    assert!(showing(&h.app.ui, "layers"));
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    assert!(["properties", "layers", "libraries"].iter().all(|panel| h.app.ui.docking_hidden.contains_key(*panel)));
+    assert!(["properties", "layers", "libraries"].iter().all(|panel| !h.layout().contains(&panel.to_string())));
+    h.app.run("window.panel.activate", json!({"panel": "libraries"})).unwrap();
+    assert!(h.layout().contains(&"libraries".to_string()));
+    assert!(!h.app.ui.docking_hidden.contains_key("libraries"));
+    assert!(["properties", "layers"].iter().all(|panel| h.app.ui.docking_hidden.contains_key(*panel)));
+    h.app.run("window.panel.close", json!({"panel": "libraries"})).unwrap();
+    assert!(h.app.ui.docking_hidden.contains_key("libraries"));
+    assert!(!h.layout().contains(&"libraries".to_string()));
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    assert_eq!(group_of(&h.layout(), &"layers".into()), ["properties", "layers"]);
+    assert!(!h.layout().contains(&"libraries".to_string()));
+    assert!(showing(&h.app.ui, "layers"));
 }
 
 #[test]
