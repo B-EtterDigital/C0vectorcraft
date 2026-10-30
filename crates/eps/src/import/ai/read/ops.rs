@@ -406,9 +406,10 @@ impl<'a> Reader<'a> {
         }
     }
 
-    /// `mode opacity isolate knockout shape Xy`; after a group's end, the group's too, and right
-    /// after a gradient mesh's `/End X!` (before its `Xd` and `6 () XW`), the mesh's, unless the
-    /// layer's `LB` follows: then it is the layer's (see `end_layer`).
+    /// `mode opacity isolate knockout shape Xy`; after a group's end, the group's too, after a
+    /// blend's record the blend's, and right after a gradient mesh's `/End X!` (before its `Xd` and
+    /// `6 () XW`), the mesh's, unless the layer's `LB` follows: then it is the layer's (see
+    /// `end_layer`).
     fn transparency(&mut self, vals: &[V], mesh_ended: bool) {
         let n = Self::nums(vals);
         let [mode, opacity, rest @ ..] = n.as_slice() else { return };
@@ -430,7 +431,7 @@ impl<'a> Reader<'a> {
             (n.opacity, n.blend, n.isolate, n.knockout) = (gs.opacity, gs.blend, gs.isolate, gs.knockout);
             self.mesh_undo = Some(before);
             self.layer_state = in_layer.then_some((gs.opacity, gs.blend, gs.isolate, gs.knockout));
-        } else if self.last_object().is_some_and(|n| matches!(n.kind, NodeKind::Group { .. } | NodeKind::Compound { .. })) {
+        } else if self.last_object().is_some_and(|n| matches!(n.kind, NodeKind::Group { .. } | NodeKind::Compound { .. } | NodeKind::Blend { .. })) {
             if let Some(n) = self.last_object() {
                 n.opacity = gs.opacity;
                 n.blend = gs.blend;
