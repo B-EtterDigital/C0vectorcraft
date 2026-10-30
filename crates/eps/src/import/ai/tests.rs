@@ -391,6 +391,29 @@ fn a_layer_keeps_its_own_transparency() {
     let doc = read_ok(&layer(&art_)).doc;
     assert_eq!(doc.layers[0].opacity, 1.0, "no layer state written: the layer stays opaque");
     assert_eq!(art(&doc)[0].opacity, 0.5, "the group's own state");
+    // A layer whose last object is a gradient mesh: an `Xy` right after the mesh's end is the
+    // layer's when `LB` follows (directly or after the layer's `Xd` and `7 () XW`), and the mesh's
+    // when its own `6 () XW` follows.
+    let corner =
+        |x: i32, y: i32, next: (i32, i32), prev: (i32, i32)| format!("%_[1 1 1 1 {x} {y} {} {} 1 {} {} 1] /N X#\n", next.0, next.1, prev.0, prev.1);
+    let mesh = format!(
+        "0 0.8 0 0 0 Xy\n/Mesh X!\n%_(DeviceRGB) /CS X#\n%_[0 0] /P X#\n{}{}{}{}%_0 /E X#\n/End X!\n",
+        corner(0, 0, (0, 10), (10, 0)),
+        corner(0, 40, (10, 40), (0, 30)),
+        corner(40, 40, (40, 30), (30, 40)),
+        corner(40, 0, (30, 0), (40, 10)),
+    );
+    for (after, layer_state, mesh_state) in [
+        ("1 0.35 0 0 0 Xy\n", (0.35, BlendMode::Multiply), (0.8, BlendMode::Normal)),
+        ("1 0.35 0 0 0 Xy\n0 0 Xd\n7 () XW\n", (0.35, BlendMode::Multiply), (0.8, BlendMode::Normal)),
+        ("1 0.35 0 0 0 Xy\n0 0 Xd\n6 () XW\n", (1.0, BlendMode::Normal), (0.35, BlendMode::Multiply)),
+    ] {
+        let doc = read_ok(&layer(&format!("{mesh}{after}"))).doc;
+        let l = &doc.layers[0];
+        assert!(matches!(art(&doc)[0].kind, NodeKind::Mesh(_)), "{after:?}");
+        assert_eq!((l.opacity, l.blend), layer_state, "the layer's state after {after:?}");
+        assert_eq!((art(&doc)[0].opacity, art(&doc)[0].blend), mesh_state, "the mesh's state after {after:?}");
+    }
 }
 
 #[test]
