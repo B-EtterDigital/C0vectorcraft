@@ -336,22 +336,25 @@ fn cmd_alt_shift_j_opens_average_and_join() {
     assert_eq!(app.ui.dialog.as_ref().map(|d| d.str("to")).as_deref(), Some("smooth"), "the choice confirmed last");
 }
 
-/// Cmd+Alt+Shift+2 is Object › Lock › Unselected Artwork: it locks the object that is not
-/// selected. Cmd+Alt+2 still unlocks all, and Cmd+2 still locks the selection. In isolation mode
-/// the item is disabled.
+/// Cmd+Alt+Shift+2 locks unselected artwork, including inside an isolated group.
 #[test]
 fn cmd_alt_shift_2_locks_unselected_artwork() {
     let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
     app.session.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
     assert_eq!(crate::menus::shortcut_of("object.lock.unselected"), Some("Cmd+Alt+Shift+2"));
+    assert_eq!(crate::menus::shortcut_of("object.hide.unselected"), Some("Cmd+Alt+Shift+3"));
+    assert!(!crate::menus::menu_tree_named(true).iter().any(|(_, items)| format!("{items:?}").contains("object.lock.unselected")));
     let rect = |app: &mut VectorcraftApp, x: f64| {
         let r = app.session.execute("shape.rectangle", &json!({"x": x, "y": 10, "width": 20, "height": 20})).unwrap();
         vectorcraft_doc::NodeId(r["id"].as_u64().unwrap())
     };
     let (a, b) = (rect(&mut app, 10.0), rect(&mut app, 50.0));
+    app.session.execute("select.none", &json!({})).unwrap();
+    assert!(!crate::menus::enabled(&app, "object.lock.unselected"), "nothing selected");
     let locked = |app: &VectorcraftApp| [a, b].map(|id| app.session.doc().unwrap().doc.node(id).unwrap().locked);
     let two = |modifiers| egui::Event::Key { key: Key::Num2, physical_key: None, pressed: true, repeat: false, modifiers };
     app.session.execute("select.set", &json!({"ids": [a.0]})).unwrap();
+    assert!(crate::menus::enabled(&app, "object.lock.unselected"), "selection present");
     frame(&mut app, vec![two(Modifiers::COMMAND | Modifiers::ALT | Modifiers::SHIFT)]);
     assert_eq!(locked(&app), [false, true]);
     frame(&mut app, vec![two(Modifiers::COMMAND | Modifiers::ALT)]);
@@ -359,15 +362,15 @@ fn cmd_alt_shift_2_locks_unselected_artwork() {
     app.session.execute("select.set", &json!({"ids": [a.0]})).unwrap();
     frame(&mut app, vec![two(Modifiers::COMMAND)]);
     assert_eq!(locked(&app), [true, false], "Cmd+2 locks the selection");
-    // In isolation mode the menu item is off, and the shortcut locks nothing.
+    // The shortcut uses the isolated group as its scope.
     app.session.execute("object.unlockAll", &json!({})).unwrap();
     app.session.execute("select.set", &json!({"ids": [a.0, b.0]})).unwrap();
     let g = app.session.execute("object.group", &json!({})).unwrap()["id"].as_u64().unwrap();
     app.session.execute("object.isolate", &json!({"id": g})).unwrap();
     app.session.execute("select.set", &json!({"ids": [a.0]})).unwrap();
-    assert!(!crate::menus::enabled(&app, "object.lock.unselected"));
+    assert!(crate::menus::enabled(&app, "object.lock.unselected"));
     frame(&mut app, vec![two(Modifiers::COMMAND | Modifiers::ALT | Modifiers::SHIFT)]);
-    assert_eq!(locked(&app), [false, false], "nothing is locked in isolation mode");
+    assert_eq!(locked(&app), [false, true], "unselected member locks in isolation mode");
 }
 
 /// Cmd+Shift+B while the Type tool edits text is Type › Bold, not Hide Bounding Box (#724).
