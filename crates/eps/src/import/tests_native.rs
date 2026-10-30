@@ -192,6 +192,33 @@ fn text_and_its_strokes_come_from_the_page_into_the_layer_of_its_text_object() {
     assert!(r.warnings.is_empty(), "{:?}", r.warnings);
 }
 
+/// A point type object in the legacy format (`To` … `TO`), as an EPS saved for Illustrator 10
+/// keeps its type in the editing data: no `/AI11Text` for the page's type to go in.
+fn legacy_text(x: u32, y: u32, text: &str) -> String {
+    format!("0 To\n1 0 0 1 {x} {y} 0 Tp\nTP\n0 Tr\n0 0 0 1 k\n/_Helvetica 12 Tf\n({text}) Tx\nTO")
+}
+
+#[test]
+fn type_in_the_legacy_format_is_the_layers_own_and_the_page_has_text() {
+    let page = format!("{}\n0 0 0 1 setcmykcolor /Helvetica findfont 12 scalefont setfont 10 50 moveto (Hi) show", page_square(10, 10));
+    let art = native(&(layer("Art", true, &square(10, 10)) + &layer("Words", true, &legacy_text(10, 50, "Hi"))));
+    let r = import(&eps(&page, &art)).unwrap();
+    assert_eq!(names(&r.document), ["Art", "Words"], "{:?}", r.warnings);
+    let texts = text_of(&r.document.layers[1]);
+    assert_eq!(texts.len(), 1, "{:?}", r.warnings);
+    assert_eq!(texts[0].plain_text(), "Hi");
+    assert!(!r.warnings.iter().any(|w| w.contains("left out") || w.contains("weren't read")), "{:?}", r.warnings);
+    // Type the editing data keeps as outlines (here a stand-in, a small square where the page has
+    // more type) comes in as they are, and the import says so.
+    let page = format!("{page}\n/Helvetica findfont 4 scalefont setfont 60 20 moveto (o) show");
+    let outlines = format!("{}\n0 0 0 1 k\n60.5 20 m\n62.5 20 L\n62.5 22 L\n60.5 22 L\nf", legacy_text(10, 50, "Hi"));
+    let art = native(&(layer("Art", true, &square(10, 10)) + &layer("Words", true, &outlines)));
+    let r = import(&eps(&page, &art)).unwrap();
+    assert_eq!(names(&r.document), ["Art", "Words"], "{:?}", r.warnings);
+    assert_eq!(kinds(&r.document.layers[1]), ["text", "path"], "{:?}", r.warnings);
+    assert!(r.warnings.iter().any(|w| w.starts_with("1 text objects of the page are outlines on the layers")), "{:?}", r.warnings);
+}
+
 #[test]
 fn a_damaged_editing_copy_leaves_the_page() {
     // Not ASCII85, ASCII85 of something that isn't Zstandard, Zstandard of something that isn't art.
