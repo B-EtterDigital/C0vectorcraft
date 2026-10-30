@@ -5789,9 +5789,9 @@ type and evening out horizontal scales are not there yet.
 Path Precision Tools is a built-in add-on for exact anchor and path work: its commands are `addon.pathtools.*`, and in
 the desktop app it lives in Object › Plug-ins › Path Precision Tools, in its Anchor Inspector panel
 (`window.panel {panel: "anchorInspector"}`), in its Parametric Shape panel (`window.panel {panel: "parametricShape"}`)
-and in four tools that the toolbars don't show until they are added from the All Tools drawer (or chosen with
-`tool.select`): `anchorEraserBrush`, `extendPath`, `measureInspect` and `parametricShape`. None has a shortcut. Each edit
-is one undo step, and an edit that changes nothing makes no step.
+and in six tools that the toolbars don't show until they are added from the All Tools drawer (or chosen with
+`tool.select`): `anchorEraserBrush`, `extendPath`, `measureInspect`, `parametricShape`, `cornerTool` and `slideAnchor`.
+None has a shortcut. Each edit is one undo step, and an edit that changes nothing makes no step.
 
 Tools:
 
@@ -5814,6 +5814,19 @@ Tools:
   gear's tooth height, an arrow's head, a cross's bar, a heart's notch, a bubble's tail tip); each drag runs
   `addon.pathtools.shape.set`. A double-click on the canvas places a shape with the last settings. Options
   (`tool.setOption`, or the panel with no shape selected) are the next shape's numbers, as the commands take them.
+- **Corner Tool** (`cornerTool`, or the UI command `addon.pathtools.cornerTool`, which also shows the Anchor Inspector
+  panel with its Corners section): edits the app's Live Corners on any path, selected or not. Over an anchor where two
+  sides meet at an angle the anchor shows; a click runs `addon.pathtools.cornerSet` with the tool's `radius` (pt, 10)
+  and `kind` (`round`, `invertedRound` or `chamfer`), and a drag from it sizes the corner (Shift: whole values of the
+  ruler's unit; no larger than fits). A cut corner shows a marker at the centre of its cut: a click selects the corner
+  and loads its radius and kind into the tool, a drag resizes it (to 0 it goes), a double-click removes it. An Alt-drag
+  cuts corners on every anchor in the marquee, replacing those there; a plain marquee selects the corners inside (Shift
+  toggles), and a click away deselects. The panel section sets `radius` and `kind`, counts the selected corners and has
+  Apply to Selected Anchors.
+- **Slide Anchor Along Path** (`slideAnchor`): a drag on an anchor runs `addon.pathtools.slideAnchor`, previewed while
+  dragging: the anchor runs along the curve it sits on, as far as just short of its neighbours, and the two segments
+  beside it are refitted. Shift snaps to where the path's tangent is at a multiple of 45° from the Constrain Angle. Ends
+  of open paths don't slide.
 
 Commands:
 
@@ -5846,6 +5859,19 @@ Commands:
 - `addon.pathtools.crossings {cut?, selfCrossings?, ids?}` adds anchors where the selected paths cross one another (and
   where each crosses itself, with `selfCrossings`), or with `cut` also cuts them there: a path of one subpath becomes a
   path per piece. Paths that meet at a shared anchor don't cross there; at most 10,000 segments at once.
+- `addon.pathtools.cornerSet {ids?, anchors?, items?, radius, kind?}` cuts live corners, the ones Direct Selection's
+  corner widgets and the Corners dialog edit, as one undo step. `ids` (default: the selection) are the paths and
+  `anchors` the anchor indices of each path's outline with no corners cut; without `anchors`, a path's direct-selected
+  anchors, or all of them. `items: [{id, anchors?}…]` gives each path its own instead. Only anchors where two sides meet
+  at an angle take a corner: smooth anchors and open ends are skipped, and it is an error if none is left. `radius` is
+  0 to 1,000,000 pt, drawn no larger than fits; `kind` is `round`, `invertedRound` or `chamfer` (default: each corner's
+  own). → `{ids, corners}`.
+- `addon.pathtools.cornerRemove {ids?, anchors?, items?}` makes those corners sharp again, as one undo step; a plain path
+  with none left is plain again. → `{ids, corners}`.
+- `addon.pathtools.slideAnchor {id, subpath?, anchor, t}` moves an anchor along its path, the segments beside it refitted
+  so the outline stays (the anchor count and index stay). `t`, -0.98 to 0.98, says where: positive, a curve parameter on
+  the segment after the anchor; negative, back from the end of the one before. An anchor at a sharp corner loses it, as
+  the corner isn't on the way. → `{id, strayed}`, how far the outline moved in points.
 - `addon.pathtools.shape.create {center, kind?, width?, height?, rotation?, count?, a?, b?, radius?}` draws a parametric
   shape with the current paint, selected. `kind`: `rectangle`, `ellipse`, `polygon` (default), `star`, `ring`, `arrow`,
   `cross`, `heart`, `gear` or `bubble` (a speech bubble). `width` and `height` are 0.01 to 16,384 pt (100);
