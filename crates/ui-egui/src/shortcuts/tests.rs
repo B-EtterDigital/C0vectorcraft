@@ -1133,30 +1133,38 @@ fn remembered_paint_app() -> VectorcraftApp {
 fn plain_and_shifted_paint_keys_run_once_on_us_and_german_like_input() {
     let mut app = remembered_paint_app();
     let paint = |app: &VectorcraftApp| crate::panels::current_paints(app).0;
-    let press = |key, modifiers, typed: &str| {
+    let press = |key, physical_key, modifiers, typed: &str| {
         vec![
             egui::Event::ModifiersChanged(modifiers),
-            egui::Event::Key { key, physical_key: Some(key), pressed: true, repeat: false, modifiers },
+            egui::Event::Key { key, physical_key: Some(physical_key), pressed: true, repeat: false, modifiers },
             egui::Event::Text(typed.into()),
         ]
     };
-    for (key, modifiers, typed) in [(Key::Period, Modifiers::NONE, "."), (Key::Period, Modifiers::SHIFT, ">"), (Key::Period, Modifiers::SHIFT, ":")] {
+    for (key, physical_key, modifiers, typed) in [
+        (Key::Period, Key::Period, Modifiers::NONE, "."),
+        (Key::Period, Key::Period, Modifiers::SHIFT, ">"),
+        (Key::Colon, Key::Period, Modifiers::SHIFT, ":"),
+    ] {
         let before = app.session.active().unwrap().history.undo.len();
-        frame(&mut app, press(key, modifiers, typed));
+        frame(&mut app, press(key, physical_key, modifiers, typed));
         assert!(matches!(paint(&app), vectorcraft_color::Paint::Gradient(_)), "{typed} applies gradient");
         assert_eq!(app.session.active().unwrap().history.undo.len(), before + 1, "{typed} runs once");
         app.session.execute("paint.setFill", &json!({"color": "#336699"})).unwrap();
     }
-    for (key, modifiers, typed) in [(Key::Comma, Modifiers::NONE, ","), (Key::Comma, Modifiers::SHIFT, "<"), (Key::Comma, Modifiers::SHIFT, ";")] {
+    for (key, physical_key, modifiers, typed) in [
+        (Key::Comma, Key::Comma, Modifiers::NONE, ","),
+        (Key::Comma, Key::Comma, Modifiers::SHIFT, "<"),
+        (Key::Semicolon, Key::Comma, Modifiers::SHIFT, ";"),
+    ] {
         app.session.execute("paint.setFill", &json!({"gradient": {"kind": "linear"}})).unwrap();
         let before = app.session.active().unwrap().history.undo.len();
-        frame(&mut app, press(key, modifiers, typed));
+        frame(&mut app, press(key, physical_key, modifiers, typed));
         assert_eq!(paint(&app).color().map(|c| c.to_hex()), Some("#336699".into()), "{typed} applies color");
         assert_eq!(app.session.active().unwrap().history.undo.len(), before + 1, "{typed} runs once");
     }
     let before = app.session.active().unwrap().history.undo.len();
     for typed in [">", "<"] {
-        frame(&mut app, press(Key::Backslash, Modifiers::NONE, typed));
+        frame(&mut app, press(Key::Backslash, Key::Backslash, Modifiers::NONE, typed));
     }
     assert_eq!(app.session.active().unwrap().history.undo.len(), before, "another key typing a bracket runs no paint command");
 
@@ -1165,18 +1173,38 @@ fn plain_and_shifted_paint_keys_run_once_on_us_and_german_like_input() {
     app.session.apply_actions(vec![vectorcraft_tools::Action::Notify("text.editNew".into())]).unwrap();
     app.session.set_tool_option("select", &json!({"start": 2, "end": 2}));
     assert!(app.session.tool_wants_text());
-    let before = app.session.active().unwrap().history.undo.len();
-    for (key, mods, typed) in [
-        (Key::Comma, Modifiers::NONE, ","),
-        (Key::Period, Modifiers::NONE, "."),
-        (Key::Comma, Modifiers::SHIFT, "<"),
-        (Key::Period, Modifiers::SHIFT, ">"),
+    app.session.execute("paint.setFill", &json!({"gradient": {"kind": "linear"}})).unwrap();
+    let paints_before = crate::panels::current_paints(&app);
+    assert!(matches!(paints_before.0, vectorcraft_color::Paint::Gradient(_)));
+    for (key, physical_key, mods, typed) in [
+        (Key::Comma, Key::Comma, Modifiers::NONE, ","),
+        (Key::Period, Key::Period, Modifiers::NONE, "."),
+        (Key::Comma, Key::Comma, Modifiers::SHIFT, "<"),
+        (Key::Period, Key::Period, Modifiers::SHIFT, ">"),
+        (Key::Colon, Key::Period, Modifiers::SHIFT, ":"),
+        (Key::Semicolon, Key::Comma, Modifiers::SHIFT, ";"),
     ] {
-        frame(&mut app, press(key, mods, typed));
+        frame(&mut app, press(key, physical_key, mods, typed));
+        assert_eq!(crate::panels::current_paints(&app), paints_before, "typing {typed} keeps fill and stroke");
     }
-    assert_eq!(text_and_layers(&mut app, id).0, "Hi,.<>");
-    assert!(app.session.active().unwrap().history.undo.len() <= before + 4, "typing runs no paint commands");
-    assert!(matches!(crate::panels::current_paints(&app).0, vectorcraft_color::Paint::Solid { .. }));
+    assert_eq!(text_and_layers(&mut app, id).0, "Hi,.<>:;");
+}
+
+#[test]
+fn explicit_logical_shifted_binding_wins_over_position_alias() {
+    let mut app = remembered_paint_app();
+    crate::keymap::set_override(&mut app.ui.shortcut_overrides, "paint.lastGradient", "Shift+;");
+    let before = app.session.active().unwrap().history.undo.len();
+    frame(
+        &mut app,
+        vec![
+            egui::Event::ModifiersChanged(Modifiers::SHIFT),
+            egui::Event::Key { key: Key::Semicolon, physical_key: Some(Key::Comma), pressed: true, repeat: false, modifiers: Modifiers::SHIFT },
+            egui::Event::Text(";".into()),
+        ],
+    );
+    assert!(matches!(crate::panels::current_paints(&app).0, vectorcraft_color::Paint::Gradient(_)));
+    assert_eq!(app.session.active().unwrap().history.undo.len(), before + 1);
 }
 
 #[test]
