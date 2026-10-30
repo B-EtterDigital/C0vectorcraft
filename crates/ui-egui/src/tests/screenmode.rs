@@ -68,6 +68,117 @@ fn snapshot(app: &VectorcraftApp) -> impl Fn(&VectorcraftApp) -> bool + use<> {
     }
 }
 
+fn in_screen_mode(ctx: &egui::Context, mode: u8) -> VectorcraftApp {
+    let mut app = VectorcraftApp::new(Session::new(), crate::Services::default());
+    app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+    let id = app.run("shape.rectangle", json!({"x": 90, "y": 40, "width": 20, "height": 20})).unwrap()["id"].clone();
+    app.run("select.set", json!({"ids": [id]})).unwrap();
+    app.select_tool("selection");
+    frame(&mut app, ctx, vec![]);
+    app.run("view.screenMode", json!({"mode": mode})).unwrap();
+    frame(&mut app, ctx, vec![]);
+    app
+}
+
+#[test]
+fn escape_leaves_both_full_screen_modes_without_editing() {
+    for mode in [1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        let unchanged = snapshot(&app);
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "mode {mode}");
+        assert!(unchanged(&app), "mode {mode}: document, selection and undo history");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "Escape in Normal mode");
+    }
+}
+
+#[test]
+fn modified_escape_keeps_full_screen_mode() {
+    for modifiers in [egui::Modifiers::SHIFT, egui::Modifiers::CTRL, egui::Modifiers::COMMAND, egui::Modifiers::ALT] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, 2);
+        let events =
+            [true, false].map(|pressed| egui::Event::Key { key: egui::Key::Escape, physical_key: None, pressed, repeat: false, modifiers }).to_vec();
+        frame(&mut app, &ctx, events);
+        assert_eq!(app.ui.screen_mode, 2, "{modifiers:?}");
+    }
+}
+
+#[test]
+fn drawer_and_isolation_take_escape_before_full_screen() {
+    for mode in [1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        app.ui.tools_drawer = true;
+        frame(&mut app, &ctx, escape());
+        assert!(!app.ui.tools_drawer);
+        assert_eq!(app.ui.screen_mode, mode, "drawer");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "after drawer");
+
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        app.run("shape.rectangle", json!({"x": 130, "y": 40, "width": 20, "height": 20})).unwrap();
+        app.run("select.all", json!({})).unwrap();
+        app.run("object.group", json!({})).unwrap();
+        app.run("object.isolate", json!({})).unwrap();
+        assert!(app.session.active().unwrap().isolation.is_some());
+        frame(&mut app, &ctx, escape());
+        assert!(app.session.active().unwrap().isolation.is_none());
+        assert_eq!(app.ui.screen_mode, mode, "isolation");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "after isolation");
+    }
+}
+
+#[test]
+fn a_tool_drag_takes_escape_before_full_screen_exits() {
+    use vectorcraft_tools::{PointerEvent, PointerKind};
+    let ctx = egui::Context::default();
+    let mut app = in_screen_mode(&ctx, 2);
+    let view = app.view_info();
+    app.session.pointer(&PointerEvent::new(PointerKind::Down, 100.0, 50.0), view).unwrap();
+    app.session.pointer(&PointerEvent::new(PointerKind::Drag, 120.0, 70.0), view).unwrap();
+    assert!(app.session.tool_busy());
+    frame(&mut app, &ctx, escape());
+    assert!(!app.session.tool_busy());
+    assert_eq!(app.ui.screen_mode, 2);
+    frame(&mut app, &ctx, escape());
+    assert_eq!(app.ui.screen_mode, 0);
+}
+
+#[test]
+fn a_popup_takes_escape_before_full_screen_exits() {
+    let ctx = egui::Context::default();
+    let mut app = in_screen_mode(&ctx, 2);
+    let pos = app.canvas_rect.unwrap().center();
+    let button = |pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Secondary, pressed, modifiers: Default::default() };
+    frame(&mut app, &ctx, vec![egui::Event::PointerMoved(pos), button(true)]);
+    frame(&mut app, &ctx, vec![button(false)]);
+    frame(&mut app, &ctx, vec![]);
+    assert!(egui::Popup::is_any_open(&ctx));
+    frame(&mut app, &ctx, escape());
+    assert_eq!(app.ui.screen_mode, 2);
+    assert!(!egui::Popup::is_any_open(&ctx));
+    frame(&mut app, &ctx, escape());
+    assert_eq!(app.ui.screen_mode, 0);
+}
+
+#[test]
+fn a_rotated_view_resets_before_full_screen_exits() {
+    let ctx = egui::Context::default();
+    let mut app = in_screen_mode(&ctx, 2);
+    app.select_tool("rotateView");
+    app.run("view.rotate", json!({"angle": 30})).unwrap();
+    frame(&mut app, &ctx, escape());
+    assert_eq!(app.view().unwrap().rotation, 0.0);
+    assert_eq!(app.ui.screen_mode, 2);
+    frame(&mut app, &ctx, escape());
+    assert_eq!(app.ui.screen_mode, 0);
+}
+
 #[test]
 fn escape_leaves_presentation_mode() {
     let mut app = VectorcraftApp::new(Session::new(), crate::Services::default());

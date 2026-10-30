@@ -245,6 +245,15 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
                     // Escape pressed twice resets a rotated view (with the Rotate View tool, once).
                     let _ = app.run("view.rotateReset", json!({}));
                     escape_pair = None;
+                } else if matches!(app.ui.screen_mode, 1 | 2)
+                    && !egui::Popup::is_any_open(ctx)
+                    && ctx.input(|i| {
+                        i.events.iter().any(|e| {
+                            matches!(e, egui::Event::Key { key: Key::Escape, pressed: true, repeat: false, modifiers, .. } if *modifiers == Modifiers::NONE)
+                        })
+                    })
+                {
+                    let _ = app.run("view.screenMode", json!({ "mode": 0 }));
                 }
             }
             // An Escape that ended something can start a pair too. One that closed a popup cannot.
