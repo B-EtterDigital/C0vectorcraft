@@ -407,6 +407,8 @@ fn a_layer_keeps_its_own_transparency() {
         ("1 0.35 0 0 0 Xy\n", (0.35, BlendMode::Multiply), (0.8, BlendMode::Normal)),
         ("1 0.35 0 0 0 Xy\n0 0 Xd\n7 () XW\n", (0.35, BlendMode::Multiply), (0.8, BlendMode::Normal)),
         ("1 0.35 0 0 0 Xy\n0 0 Xd\n6 () XW\n", (1.0, BlendMode::Normal), (0.35, BlendMode::Multiply)),
+        // The stroke style in the layer's state block.
+        ("1 0.35 0 0 0 Xy\n0 J 0 j 1 w 10 M []0 d\n0 XR\n0 0 Xd\n7 () XW\n", (0.35, BlendMode::Multiply), (0.8, BlendMode::Normal)),
     ] {
         let doc = read_ok(&layer(&format!("{mesh}{after}"))).doc;
         let l = &doc.layers[0];
@@ -414,6 +416,28 @@ fn a_layer_keeps_its_own_transparency() {
         assert_eq!((l.opacity, l.blend), layer_state, "the layer's state after {after:?}");
         assert_eq!((art(&doc)[0].opacity, art(&doc)[0].blend), mesh_state, "the mesh's state after {after:?}");
     }
+}
+
+#[test]
+fn a_layers_state_keeps_through_the_stroke_style_written_in_it() {
+    // GUARDS: a layer's state block can have the stroke style between its `Xy` and `Xd`; read as
+    // the art moving on, it lost the layer's opacity and the layer drew opaque.
+    let state = "0 0.25 0 2 0 Xy\n0 J 0 j 1 w 10 M []0 d\n0 XR\n0 0 Xd\n7 () XW\n";
+    let clip_group = format!(
+        "q\n{}h\nW\nn\n0 Ae\nu\n{RED}{}f\nU\n9 () XW\nQ\n9 () XW\n{state}",
+        rect_path(10.0, 10.0, 90.0, 90.0),
+        rect_path(0.0, 0.0, 100.0, 100.0)
+    );
+    let path = format!("{RED}{}f\n{state}", rect_path(0.0, 0.0, 10.0, 10.0));
+    for body in [clip_group, path] {
+        let doc = read_ok(&layer(&body)).doc;
+        let l = &doc.layers[0];
+        assert_eq!((l.opacity, l.knockout), (0.25, Knockout::Neutral), "{body}");
+        assert_eq!(art(&doc)[0].opacity, 1.0, "{body}");
+    }
+    // An object's own state block (`6 () XW`) isn't the layer's.
+    let note = format!("{RED}{}f\n{}", rect_path(0.0, 0.0, 10.0, 10.0), state.replace("7 () XW", "6 () XW"));
+    assert_eq!(read_ok(&layer(&note)).doc.layers[0].opacity, 1.0);
 }
 
 #[test]
