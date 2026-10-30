@@ -5903,6 +5903,37 @@ plain path from then on.
 {"name":"run_command","arguments":{"command":"addon.pathtools.shape.set","params":{"id":14,"kind":"gear","count":16,"radius":2}}}
 ```
 
+### Path Effects (live)
+
+Effect › Path Effects holds the add-on's live geometry effects, applied with `effect.apply {effect, params}` like any
+other effect, with no shortcuts. Each draws, measures, exports and stacks as the other geometry effects do; the object's
+own path stays as it is until Expand Appearance (`effect.expandAppearance`) writes the result. `effect.list` documents
+every parameter. Out-of-range values are clamped, and an effect whose result would pass the geometry effects' budget
+(2 million anchors) leaves the path as it is.
+
+| Id | Menu item | Parameters |
+| --- | --- | --- |
+| `addon.path.dashes` | Dashes to Geometry… | `dash1`…`dash5`, `gap1`…`gap5` (pt 0 to 10000; 12 and 6, then 0), `offset` (pt), `alignCorners` (bool, false) |
+| `addon.path.addAnchors` | Add Anchors… | `target` (`all`, `curved`, `straight`), `spacing` (`count`, `distance`), `count` (1 to 1000, 1), `distance` (pt, 20), `maxCount` (1 to 1000, 100) |
+| `addon.path.extend` | Extend Path… | `startLength`, `endLength` (pt, 10; negative shortens), `startPercent`, `endPercent` (% of the path's length, 0), `startShape`, `endShape` (`straight`, `arc`) |
+| `addon.path.close` | Close Path… | `mode` (`straight`, `smooth`) |
+| `addon.path.smooth` | Smooth Anchors… | `ratio` (0.01 to 0.5, 0.3905) |
+| `addon.path.retract` | Retract Handles… | `handles` (`all`, `shorter`), `length` (pt, 5) |
+| `addon.path.reverse` | Reverse Direction | none |
+| `addon.path.simplify` | Simplify Anchors… | `tolerance` (0 to 200, 10; each step lets the outline drift 0.02 pt), `protectCorners` (bool, true) |
+| `addon.path.split` | Split at Anchors… | `anchors` (`corner`, `smooth`, `both`) |
+
+Dashes to Geometry turns the path into open subpaths, one per dash; with `alignCorners`, every run between corners and
+ends holds whole periods with a dash centred on each corner and end, and the offset doesn't apply. A dash of 0 becomes a
+point that a round or projecting cap paints. Extend Path adds an end's length and percent together; closed subpaths stay
+as they are, and so does an end that would be shortened to nothing. An arc follows the end's curvature for at most half
+a circle. Split at Anchors tells smooth anchors by their handles standing in line. Simplify Anchors leaves a path of more
+than 50000 anchors as it is.
+
+```json
+{"id": 1, "method": "engine.execute", "params": {"command": "effect.apply", "params": {"effect": "addon.path.dashes", "params": {"dash1": 8, "gap1": 4, "dash2": 2, "gap2": 4, "alignCorners": true}}}}
+```
+
 ## Smart Pen add-on
 
 Smart Pen is a built-in add-on: one tool that draws paths and edits their points, handles and segments without

@@ -1,6 +1,6 @@
 # Parity with Adobe Illustrator
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-31 · **Change:** minor (Path Precision Tools add-on: Corner Tool and Slide Anchor Along Path; scores unchanged) · **Target:** Adobe Illustrator 2026 (30.x; public release notes through 30.7, August 2026)
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-31 · **Change:** minor (Path Precision Tools add-on: live Path Effects; scores unchanged) · **Target:** Adobe Illustrator 2026 (30.x; public release notes through 30.7, August 2026)
 
 ## Feature submission evidence
 
@@ -1251,6 +1251,16 @@ Kernels in `vectorcraft_pathops::addons::pathtools`. Tests: `addons::pathtools` 
 undo step, bad params refused, the brush's stroke one step) and `edit_toolbar::tests::addon_tools_are_in_the_drawer_not_the_toolbars`.
 Commands: `docs/mcp.md` › Path Precision Tools add-on.
 
+The add-on's live Path Effects (2026-10-31, Effect › Path Effects, `addon.path.*`) are geometry effects, so they draw,
+measure, export and expand as the others do: Dashes to Geometry (up to five dash and gap pairs, offset, fitted to corners
+and ends), Add Anchors (all, curved or straight segments, by count or distance, capped per segment), Extend Path (each
+end by length and percent, shortening when negative, straight or arc), Close Path (straight or smooth), Smooth Anchors,
+Retract Handles (all or the short ones), Reverse Direction, Simplify Anchors and Split at Anchors. Code in
+`vectorcraft_effects::addons::path` on the kernels above. Tests: `addons::path::tests` in `vectorcraft-effects` (geometry,
+caps, junk params and paths), `cmd::addons::pathtools::effect_tests` in `vectorcraft-engine` (drawn live, Expand
+Appearance matches the outline and the pixels, saves keep it, a file's junk params), `addons::pathtools::tests` in
+`vectorcraft-pathops` and `vectorcraft-ui-egui`, and the command sweep's junk rows.
+
 The add-on's Parametric Shape Tool (2026-10-30) draws ten kinds of shape that stay editable as numbers (rectangle,
 ellipse, polygon and star with 3 to 1,000 sides or points, ring, arrow, cross, heart, gear, speech bubble; corner radius
 limited to the middle of a side): a drag from the centre sizes and turns one, the arrow keys change its count and values
@@ -1328,6 +1338,7 @@ add-on.
 | 2026-10-30 | minor | File formats: `.ai`/EPS editing data: a blend takes the transparency (opacity, blend mode, knockout) in its state block after its record, so its steps knock each other out as the page draws them; a user's file comes in 0.6% from its page instead of 1.3%. Scores and estimates unchanged. |
 | 2026-10-31 | minor | Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path; evidence added; scores unchanged. |
 | 2026-10-30 | minor | File formats: `.ai`/EPS editing-data fidelity from an audit of a user's files: All Caps and Small Caps (#4708); placed files at their box's corner, kept where they draw closer to the page (#4664, #4723, #4742); pages cropped to the art, with `UserUnit` (#4658, #4727); gradient mesh corners with handle weights of 0 and the state written after a mesh (#4738, #4744, #4748); type on a path spaced as the file lays it out (#4743); synthetic regressions in `crates/eps`; evidence added; scores unchanged. |
+| 2026-10-31 | minor | Path Precision Tools add-on (a VectorCraft addition): live Path Effects; evidence added; scores unchanged. |
 | 2026-10-31 | minor | Artwork Cleanup add-on (a VectorCraft addition): text tools; evidence added; scores unchanged. |
 | 2026-10-30 | minor | Color Effects add-on: live Duotone (one to four inks, spot tones kept) and Print Ink Fixes; scores and estimates unchanged |
 | 2026-10-30 | minor | 3D Extrude & Bevel, Inflate and Rotate apply to type, which stays editable (#4715); scores and estimates unchanged |
