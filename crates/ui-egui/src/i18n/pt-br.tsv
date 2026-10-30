@@ -4329,7 +4329,7 @@ axis	Both	Ambos
 	Client-side (.html)	Lado do Cliente (.html)
 	Cmd	Cmd
 	Collect Links in a Separate Folder	Reunir Links em uma Pasta Separada
-	Color (,)	Cor (,)
+	Color (, or <)	Cor (, ou <)
 	Color bars	Barras de cores
 	Color Group	Grupo de Cores
 	Color Library	Biblioteca de Cores
@@ -4402,7 +4402,7 @@ axis	Both	Ambos
 	General › Placement › X	Geral › Posicionamento › X
 	General › Thumbnails	Geral › Miniaturas
 	Global Process Color, CMYK	Cor de Processo Global, CMYK
-	Gradient (.)	Gradiente (.)
+	Gradient (. or >)	Gradiente (. ou >)
 	Graph Data	Dados do Gráfico
 	Graph Type	Tipo de Gráfico
 	New Design	Novo Design

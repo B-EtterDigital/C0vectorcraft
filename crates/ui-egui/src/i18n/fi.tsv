@@ -1187,12 +1187,12 @@ lighting	Light	Valo
 	 to set spacing and orientation	 asettaaksesi välit ja suunnan
 	Apply	Käytä
 	Change Screen Mode (F)	Vaihda näyttötilaa (F)
-	Color (,)	Väri (,)
+	Color (, or <)	Väri (, tai <)
 	Draw Behind	Piirrä taakse
 	Draw Inside	Piirrä sisään
 	Draw Normal	Piirrä normaalisti
 	Expand:	Laajenna:
-	Gradient (.)	Liukuväri (.)
+	Gradient (. or >)	Liukuväri (. tai >)
 	H:	K:
 	Modify	Muokkaa
 	Navigate	Siirry

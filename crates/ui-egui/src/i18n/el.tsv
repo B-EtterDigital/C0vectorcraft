@@ -470,7 +470,7 @@ font-technology	Variable	Μεταβλητές
 	Collect in New Layer	Συγκέντρωση σε νέο επίπεδο
 	Collect Links in a Separate Folder	Συγκέντρωση συνδεδεμένων αρχείων σε ξεχωριστό φάκελο
 	Color	Χρώμα
-	Color (,)	Χρώμα (,)
+	Color (, or <)	Χρώμα (, ή <)
 	Color Adjustments	Ρυθμίσεις χρώματος
 	Color bars	Χρωματικές μπάρες
 	Color blindness – Deuteranopia-type	Αχρωματοψία – τύπου δευτερανοπίας
@@ -1200,7 +1200,7 @@ font-technology	Variable	Μεταβλητές
 	GPL palettes keep solid colours only, as RGB.	Οι παλέτες GPL διατηρούν μόνο συμπαγή χρώματα σε RGB.
 	GPU Performance	Απόδοση GPU
 	Gradient	Ντεγκραντέ
-	Gradient (.)	Ντεγκραντέ (.)
+	Gradient (. or >)	Ντεγκραντέ (. ή >)
 	Gradient across stroke	Ντεγκραντέ εγκάρσια στο περίγραμμα
 	Gradient along stroke	Ντεγκραντέ κατά μήκος του περιγράμματος
 	Gradient and Mesh Resolution:	Ανάλυση ντεγκραντέ και πλέγματος:

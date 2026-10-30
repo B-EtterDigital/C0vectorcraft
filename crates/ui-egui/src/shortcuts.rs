@@ -323,9 +323,13 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
     if claimed_tool_keys(app, ctx, view) {
         return;
     }
-    // Command, panel and tool shortcuts. Keys that type a character without Cmd/Alt/Ctrl are
-    // handled below as text (tool shortcuts, X, D, /, `,` and `.`).
-    let hits = dispatch(app, ctx, |hit| !(hit.trigger.chord.is_plain() && types_text(hit.trigger.chord.key)));
+    // Command, panel and tool shortcuts. A bound shifted punctuation chord uses its key press;
+    // other text keys use the typed character below.
+    let hits = dispatch(app, ctx, |hit| {
+        let chord = hit.trigger.chord;
+        let shifted_punctuation = chord.mods.shift && chord.key.name().chars().all(|c| !c.is_alphanumeric());
+        !(chord.is_plain() && types_text(chord.key) && !shifted_punctuation)
+    });
     let ran = !hits.is_empty();
     for c in hits {
         run_hit(app, ctx, &c);

@@ -1061,12 +1061,12 @@ lighting	Light	სინათლე
 	 to set spacing and orientation	 — ინტერვალისა და ორიენტაციის დასაყენებლად
 	Apply	გამოყენება
 	Change Screen Mode (F)	ეკრანის რეჟიმის შეცვლა (F)
-	Color (,)	ფერი (,)
+	Color (, or <)	ფერი (, ან <)
 	Draw Behind	უკან ხატვა
 	Draw Inside	შიგნით ხატვა
 	Draw Normal	ჩვეულებრივი ხატვა
 	Expand:	გაშლა:
-	Gradient (.)	გრადიენტი (.)
+	Gradient (. or >)	გრადიენტი (. ან >)
 	H:	სიმ.:
 	Modify	შეცვლა
 	Navigate	ნავიგაცია
