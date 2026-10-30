@@ -205,9 +205,10 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
         presentation_keys(app, ctx, escape_pair);
         return;
     }
+    let escape_ended_gesture = crate::canvas::ruler_origin_dragging(ctx) || crate::tools_float::escape_cancelled_move(ctx);
     let typing = ctx.egui_wants_keyboard_input();
     // Escape closes Edit Toolbar's drawer first (egui drops a drag from it on Escape already).
-    if app.ui.tools_drawer && !typing && ctx.input_mut(|i| i.consume_key(Modifiers::NONE, Key::Escape)) {
+    if app.ui.tools_drawer && !typing && !escape_ended_gesture && ctx.input_mut(|i| i.consume_key(Modifiers::NONE, Key::Escape)) {
         app.ui.tools_drawer = false;
     }
     let view = app.view_info();
@@ -248,7 +249,7 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
                 ctx.input_mut(|i| i.consume_key(Modifiers::NONE, k));
                 ctx.input_mut(|i| i.consume_key(Modifiers::SHIFT, k));
             }
-            if k == Key::Escape && !busy && !claimed {
+            if k == Key::Escape && !busy && !claimed && !escape_ended_gesture {
                 if app.session.active().is_some_and(|d| d.doc.pattern_edit.is_some()) {
                     let _ = app.run("object.pattern.done", json!({}));
                 } else if app.session.active().is_some_and(|d| d.isolation.is_some()) {
@@ -264,8 +265,6 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
                 } else if matches!(app.ui.screen_mode, 1 | 2)
                     && !egui::Popup::is_any_open(ctx)
                     && !text_focused_in_previous_frame(ctx)
-                    && !crate::canvas::ruler_origin_dragging(ctx)
-                    && !crate::tools_float::escape_cancelled_move(ctx)
                     && ctx.input(|i| {
                         i.events.iter().any(|e| {
                             matches!(e, egui::Event::Key { key: Key::Escape, pressed: true, repeat: false, modifiers, .. } if *modifiers == Modifiers::NONE)

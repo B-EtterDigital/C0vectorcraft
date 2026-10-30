@@ -80,6 +80,80 @@ fn in_screen_mode(ctx: &egui::Context, mode: u8) -> VectorcraftApp {
     app
 }
 
+fn begin_tools_move(app: &mut VectorcraftApp, ctx: &egui::Context) -> (Option<[f32; 2]>, egui::Pos2) {
+    app.run("window.panel.float", json!({"panel": "tools", "x": 120, "y": 140})).unwrap();
+    frame(app, ctx, vec![]);
+    frame(app, ctx, vec![]);
+    let original = app.ui.toolbar_pos;
+    let area = ctx.memory(|m| m.area_rect(egui::Id::unique("toolbar-floating"))).expect("the floating Tools area");
+    let title = area.min + egui::vec2(20.0, 17.0);
+    let to = title + egui::vec2(100.0, 80.0);
+    let button = |pos, pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
+    frame(app, ctx, vec![egui::Event::PointerMoved(title), button(title, true)]);
+    for step in 1..=6 {
+        frame(app, ctx, vec![egui::Event::PointerMoved(title + (to - title) * (step as f32 / 6.0))]);
+    }
+    assert_ne!(app.ui.toolbar_pos, original, "the Tools panel moved");
+    (original, to)
+}
+
+fn begin_ruler_origin_drag(app: &mut VectorcraftApp, ctx: &egui::Context) -> egui::Pos2 {
+    app.ui.view.rulers = true;
+    frame(app, ctx, vec![]);
+    let corner = ctx.read_response(egui::Id::unique("ruler-corner")).expect("the rulers' corner").rect.center();
+    let to = app.canvas_rect.unwrap().center();
+    let button = |pos, pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
+    frame(app, ctx, vec![egui::Event::PointerMoved(corner)]);
+    frame(app, ctx, vec![button(corner, true)]);
+    frame(app, ctx, vec![egui::Event::PointerMoved(to)]);
+    assert!(crate::canvas::ruler_origin_dragging(ctx));
+    to
+}
+
+fn release_drag(app: &mut VectorcraftApp, ctx: &egui::Context, to: egui::Pos2) {
+    frame(
+        app,
+        ctx,
+        vec![egui::Event::PointerButton { pos: to, button: egui::PointerButton::Primary, pressed: false, modifiers: Default::default() }],
+    );
+}
+
+fn start_escape_action(app: &mut VectorcraftApp, ctx: &egui::Context, action: &str) {
+    match action {
+        "drawer" => app.ui.tools_drawer = true,
+        "pattern" => {
+            app.run("object.pattern.make", json!({"name": "Dots", "width": 20, "height": 20})).unwrap();
+        }
+        "isolation" => {
+            app.run("shape.rectangle", json!({"x": 130, "y": 40, "width": 20, "height": 20})).unwrap();
+            app.run("select.all", json!({})).unwrap();
+            app.run("object.group", json!({})).unwrap();
+            app.run("object.isolate", json!({})).unwrap();
+        }
+        "global" => {
+            app.run("shape.rectangle", json!({"x": 130, "y": 40, "width": 20, "height": 20})).unwrap();
+            app.run("select.globalEdit", json!({})).unwrap();
+        }
+        "flyout" => {
+            app.ui.flyout = Some(0);
+            ctx.data_mut(|d| d.insert_temp(egui::Id::unique("flyout-tools"), vec!["selection".to_string(), "directSelection".to_string()]));
+        }
+        _ => panic!("unknown Escape action"),
+    }
+    assert!(escape_action_active(app, action), "{action} starts");
+}
+
+fn escape_action_active(app: &VectorcraftApp, action: &str) -> bool {
+    match action {
+        "drawer" => app.ui.tools_drawer,
+        "pattern" => app.session.active().unwrap().doc.pattern_edit.is_some(),
+        "isolation" => app.session.active().unwrap().isolation.is_some(),
+        "global" => app.session.active().unwrap().global_edit.is_some(),
+        "flyout" => app.ui.flyout.is_some(),
+        _ => false,
+    }
+}
+
 #[test]
 fn escape_leaves_both_full_screen_modes_without_editing() {
     for mode in [1, 2] {
@@ -197,6 +271,68 @@ fn a_floating_tools_move_takes_escape_before_full_screen_exits() {
         frame(&mut app, &ctx, vec![button(to, false)]);
         frame(&mut app, &ctx, escape());
         assert_eq!(app.ui.screen_mode, 0, "Escape after the move in mode {mode}");
+    }
+}
+
+#[test]
+fn cancelling_tools_move_keeps_rotation_in_both_full_screen_modes() {
+    for mode in [1, 2] {
+        for tool in ["rotateView", "selection"] {
+            let ctx = egui::Context::default();
+            let mut app = in_screen_mode(&ctx, mode);
+            app.select_tool(tool);
+            app.run("view.rotate", json!({"angle": 30})).unwrap();
+            if tool == "selection" {
+                frame(&mut app, &ctx, escape());
+                assert_eq!(app.ui.screen_mode, 0, "first Escape leaves mode {mode}");
+                assert_eq!(app.view().unwrap().rotation, 30.0);
+            }
+            let (original, to) = begin_tools_move(&mut app, &ctx);
+            frame(&mut app, &ctx, escape());
+            assert_eq!(app.ui.toolbar_pos, original, "{tool} in mode {mode}");
+            assert_eq!(app.view().unwrap().rotation, 30.0, "{tool} in mode {mode}");
+            release_drag(&mut app, &ctx, to);
+            frame(&mut app, &ctx, escape());
+            assert_eq!(app.view().unwrap().rotation, 0.0, "later Escape resets rotation");
+        }
+    }
+}
+
+#[test]
+fn cancelling_tools_move_keeps_the_next_escape_action() {
+    for mode in [0, 1, 2] {
+        for action in ["drawer", "pattern", "isolation", "global", "flyout"] {
+            let ctx = egui::Context::default();
+            let mut app = in_screen_mode(&ctx, mode);
+            let (original, to) = begin_tools_move(&mut app, &ctx);
+            start_escape_action(&mut app, &ctx, action);
+            frame(&mut app, &ctx, escape());
+            assert_eq!(app.ui.toolbar_pos, original, "move cancelled in mode {mode}, {action}");
+            assert!(escape_action_active(&app, action), "Escape keeps {action} in mode {mode}");
+            assert_eq!(app.ui.screen_mode, mode, "mode {mode}, {action}");
+            release_drag(&mut app, &ctx, to);
+            frame(&mut app, &ctx, escape());
+            assert!(!escape_action_active(&app, action), "later Escape ends {action} in mode {mode}");
+        }
+    }
+}
+
+#[test]
+fn cancelling_ruler_origin_drag_keeps_the_next_escape_action() {
+    for mode in [0, 1, 2] {
+        for action in ["pattern", "isolation", "flyout"] {
+            let ctx = egui::Context::default();
+            let mut app = in_screen_mode(&ctx, mode);
+            let to = begin_ruler_origin_drag(&mut app, &ctx);
+            start_escape_action(&mut app, &ctx, action);
+            frame(&mut app, &ctx, escape());
+            assert!(escape_action_active(&app, action), "Escape keeps {action} in mode {mode}");
+            assert_eq!(app.ui.screen_mode, mode, "mode {mode}, {action}");
+            release_drag(&mut app, &ctx, to);
+            assert!(!crate::canvas::ruler_origin_dragging(&ctx));
+            frame(&mut app, &ctx, escape());
+            assert!(!escape_action_active(&app, action), "later Escape ends {action} in mode {mode}");
+        }
     }
 }
 
