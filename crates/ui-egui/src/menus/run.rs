@@ -48,6 +48,9 @@ pub fn run_ui_command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<R
             app.ui.open_panel = None;
             return Some(Ok(json!({"open": null})));
         }
+        if p.get("toggleGroup").and_then(Value::as_bool) == Some(true) {
+            return Some(crate::panel_docking::hide_group(app, panel));
+        }
         return Some(app.run("window.panel.close", json!({"panel": panel})));
     }
     if let Some(result) = crate::panel_docking::command(app, id, p) {

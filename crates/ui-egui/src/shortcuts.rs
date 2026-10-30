@@ -755,6 +755,7 @@ fn shortcut_params(c: &CommandRef) -> serde_json::Value {
         )
     {
         params["toggle"] = json!(true);
+        params["toggleGroup"] = json!(true);
     }
     params
 }

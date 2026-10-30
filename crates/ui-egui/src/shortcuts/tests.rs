@@ -1,6 +1,44 @@
 use super::*;
 
 #[test]
+fn named_panel_default_chords_toggle_their_panels() {
+    let keymap = crate::keymap::keymap_with(&craft_keymap::Overrides::new());
+    for (panel, chord) in [
+        ("brushes", "F5"),
+        ("color", "F6"),
+        ("layers", "F7"),
+        ("graphicStyles", "Shift+F5"),
+        ("appearance", "Shift+F6"),
+        ("align", "Shift+F7"),
+        ("transform", "Shift+F8"),
+        ("info", "Cmd+F8"),
+        ("gradient", "Cmd+F9"),
+        ("pathfinder", "Cmd+Shift+F9"),
+        ("stroke", "Cmd+F10"),
+        ("transparency", "Cmd+Shift+F10"),
+        ("attributes", "Cmd+F11"),
+        ("symbols", "Cmd+Shift+F11"),
+    ] {
+        let chord = crate::keymap::vc_chord(chord).unwrap();
+        let hit = crate::keymap::lookup(&keymap, &chord).unwrap();
+        assert_eq!(hit.id, "window.panel");
+        assert_eq!(hit.params["panel"], panel);
+        assert_eq!(shortcut_params(&hit)["toggle"], true);
+        assert_eq!(shortcut_params(&hit)["toggleGroup"], true);
+    }
+}
+
+#[test]
+fn other_panel_shortcuts_keep_plain_panel_params() {
+    for panel in ["character", "swatches"] {
+        let hit = CommandRef { id: "window.panel".into(), params: json!({"panel": panel}) };
+        let params = shortcut_params(&hit);
+        assert!(params.get("toggle").is_none(), "{panel} gained toggle");
+        assert!(params.get("toggleGroup").is_none(), "{panel} gained toggleGroup");
+    }
+}
+
+#[test]
 fn rebound_layers_chord_toggles_and_plain_panel_command_reveals() {
     let mut overrides = craft_keymap::Overrides::new();
     crate::keymap::set_override(&mut overrides, "panel:layers", "Cmd+Alt+Shift+F7");

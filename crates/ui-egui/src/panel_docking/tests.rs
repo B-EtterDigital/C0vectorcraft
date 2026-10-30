@@ -536,10 +536,59 @@ fn f7_activates_a_background_tab_before_hiding_it() {
     h.press(egui::Key::F7, egui::Modifiers::NONE);
     assert!(showing(&h.app.ui, "layers"));
     h.press(egui::Key::F7, egui::Modifiers::NONE);
-    assert!(!h.layout().contains(&"layers".to_string()));
+    assert!(["properties", "layers", "libraries"].iter().all(|panel| !h.layout().contains(&panel.to_string())));
     h.press(egui::Key::F7, egui::Modifiers::NONE);
     assert!(showing(&h.app.ui, "layers"));
-    assert_eq!(group_of(&h.layout(), &"layers".into()), vec!["properties".to_string(), "libraries".into(), "layers".into()]);
+    assert_eq!(group_of(&h.layout(), &"layers".into()), vec!["properties".to_string(), "layers".into(), "libraries".into()]);
+}
+
+#[test]
+fn f7_hides_and_restores_the_whole_expanded_group() {
+    let mut h = Harness::new();
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    assert!(["properties", "layers", "libraries"].iter().all(|panel| !h.layout().contains(&panel.to_string())));
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    assert_eq!(group_of(&h.layout(), &"layers".into()), ["properties", "layers", "libraries"]);
+    assert!(showing(&h.app.ui, "layers"));
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    h.app.run("window.panel", json!({"panel": "properties", "toggle": true})).unwrap();
+    assert_eq!(group_of(&h.layout(), &"properties".into()), ["properties", "layers", "libraries"]);
+    assert!(showing(&h.app.ui, "properties"));
+}
+
+#[test]
+fn f7_hides_and_restores_a_floating_tab_group() {
+    let mut h = Harness::new();
+    h.app.run("window.panel.float", json!({"panel": "layers", "group": true})).unwrap();
+    h.app.run("window.panel.activate", json!({"panel": "layers"})).unwrap();
+    h.frame(vec![]);
+    let before = h.layout();
+    let window = floating_window(&before, "layers").unwrap();
+    let rect = window.rect;
+    assert_eq!(group_of(&before, &"layers".into()), ["properties", "layers", "libraries"]);
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    assert!(floating_window(&h.layout(), "layers").is_none());
+    assert!(["properties", "layers", "libraries"].iter().all(|panel| !h.layout().contains(&panel.to_string())));
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    assert_eq!(floating_window(&h.layout(), "layers").unwrap().rect, rect);
+    assert_eq!(group_of(&h.layout(), &"layers".into()), ["properties", "layers", "libraries"]);
+    assert!(showing(&h.app.ui, "layers"));
+}
+
+#[test]
+fn f7_toggles_a_multi_tab_icon_flyout() {
+    let mut h = Harness::new();
+    h.app.run("window.collapseDock", json!({"collapsed": true})).unwrap();
+    h.frame(vec![]);
+    assert!(in_iconic_column(&h.layout(), "layers"));
+    assert_eq!(group_of(&h.layout(), &"layers".into()), ["properties", "layers", "libraries"]);
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    assert_eq!(h.app.ui.open_panel.as_deref(), Some("layers"));
+    h.press(egui::Key::F7, egui::Modifiers::NONE);
+    assert_eq!(h.app.ui.open_panel, None);
+    assert!(in_iconic_column(&h.layout(), "layers"));
+    assert_eq!(group_of(&h.layout(), &"layers".into()), ["properties", "layers", "libraries"]);
 }
 
 #[test]

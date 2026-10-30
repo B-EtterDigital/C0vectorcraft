@@ -337,12 +337,54 @@ fn show_panel(app: &mut VectorcraftApp, params: &Value) -> Result<Value, String>
     if !layout.contains(&panel.to_string()) && !app.ui.docking_hidden.contains_key(panel) && crate::panels::library_panel::parse(panel).is_some() {
         return crate::panels::library_panel::float(app, panel);
     }
+    if app.ui.docking_hidden.contains_key(panel) {
+        return restore_hidden_group(app, panel);
+    }
     let value = shared_command(app, "window.panel.activate", &json!({"panel": panel}))?;
     let layout = layout_of(&app.ui);
     Ok(match floating_window(&layout, panel) {
         Some(window) => json!({"floating": window_panels(window)}),
         None => value,
     })
+}
+
+/// Hides the group holding an active panel and records each tab's return location.
+pub(crate) fn hide_group(app: &mut VectorcraftApp, panel: &str) -> Result<Value, String> {
+    let mut txn = Transaction::begin(app)?;
+    let panel = panel.to_string();
+    let closed = txn.apply(Action::CloseGroup { panel })?;
+    Ok(txn.commit(app, closed, None))
+}
+
+/// Reopens the hidden tabs connected to `panel` and brings it to the front.
+fn restore_hidden_group(app: &mut VectorcraftApp, panel: &str) -> Result<Value, String> {
+    let mut txn = Transaction::begin(app)?;
+    let mut root = panel.to_string();
+    for _ in 0..craft_ui::docking::MAX_PANELS {
+        let Some((_, location)) = txn.workspace.hidden.iter().find(|(id, _)| id == &root) else { break };
+        let Some(anchor) = location.anchor.as_ref().filter(|_| matches!(location.placement, Placement::Tab { .. })) else { break };
+        if !txn.workspace.hidden.iter().any(|(id, _)| id == anchor) || anchor == &root {
+            break;
+        }
+        root = anchor.clone();
+    }
+    let mut members = vec![root];
+    for _ in 0..craft_ui::docking::MAX_PANELS {
+        let next = txn.workspace.hidden.iter().find_map(|(id, location)| {
+            (matches!(location.placement, Placement::Tab { .. })
+                && location.anchor.as_ref().is_some_and(|anchor| members.contains(anchor))
+                && !members.contains(id))
+            .then(|| id.clone())
+        });
+        let Some(next) = next else { break };
+        members.push(next);
+    }
+    for member in members {
+        let fallback = first_dock_panel(&txn.workspace.layout, &member);
+        txn.workspace.set_visible(member, true, fallback, model_permissions).map_err(|e| e.to_string())?;
+    }
+    txn.apply(Action::Activate { panel: panel.to_string() })?;
+    Ok(txn.commit(app, Vec::new(), Some(panel.to_string())))
 }
 
 /// Show `panel` as `window.panel` does, but leave it be when it already shows ([`showing`]): a
