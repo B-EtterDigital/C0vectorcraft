@@ -487,6 +487,28 @@ fn a_gradient_mesh_takes_the_transparency_written_after_it() {
 }
 
 #[test]
+fn a_masked_gradient_mesh_takes_the_transparency_written_after_its_mask() {
+    // GUARDS: a mesh with an opacity mask has its state after the mask's dictionary, whose art (on
+    // `%_` lines) has operators of its own; read as the next object's, each masked mesh in a run
+    // drew with the blend mode of the one before it.
+    let corners: String = ["10 20 10 25 1 15 20 1", "10 50 15 50 1 10 45 1", "40 50 40 45 1 35 50 1", "40 20 35 20 1 40 25 1"]
+        .iter()
+        .map(|g| format!("%_[0.5 1 {g}] /N X#\n"))
+        .collect();
+    let mesh = format!("/Mesh X!\n%_/DeviceGray /CS X#\n{corners}%_/E X#\n/End X!\n");
+    let mask = "%_/ArtDictionary :\n%_/Mask :\n%_X=\n%_u\n%_1 g\n%_10 20 m\n%_10 50 L\n%_40 50 L\n%_40 20 L\n%_f\n%_U\n%_X+\n\
+                %_(Art) ,\n%_1 /Bool (Clipping) ,\n%_1 /Bool (Linked) ,\n%_; (AI9_Mask) ,\n%_;\n";
+    let next = format!("0 1 0 0 0 Xy\n{RED}{}f\n", rect_path(60.0, 20.0, 80.0, 40.0));
+    for (state, expected) in [("1 0.5 0 0 0 Xy\n", (0.5, BlendMode::Multiply)), ("", (1.0, BlendMode::Overlay))] {
+        let a = art(&read_ok(&layer(&format!("3 1 0 0 0 Xy\n{mesh}{mask}{state}0 0 Xd\n6 () XW\n{next}"))).doc);
+        assert_eq!(a.len(), 2, "{a:?}");
+        assert!(matches!(a[0].kind, NodeKind::Mesh(_)) && a[0].extras().mask.is_some(), "{:?}", a[0]);
+        assert_eq!((a[0].opacity, a[0].blend), expected, "{state:?}: the state after the mask is the mesh's");
+        assert_eq!((a[1].opacity, a[1].blend), (1.0, BlendMode::Normal), "the next object's own state");
+    }
+}
+
+#[test]
 fn gradients() {
     let defs = "%AI5_BeginGradient: (G)\n(G) 1 2 Bd\n[\n<00FF>\n0\n0 0 0 0 1 0 0 2 1 6 %_BS\n\
                 %_0 0 0 0 1 0 0 2 1 6 40 0 Bs\n%_0 0 0 0 0 0 1 2 0.5 6 50 100 Bs\nBD\n%AI5_EndGradient\n";
