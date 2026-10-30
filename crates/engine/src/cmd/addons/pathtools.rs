@@ -355,7 +355,7 @@ fn inspect(s: &mut Session, p: &Value) -> Result<Value> {
     let id = checked_id(s, p.get("id").unwrap_or(&Value::Null), C)?;
     let (x, y) = (number_or(p, "x", f64::NAN, C)?, number_or(p, "y", f64::NAN, C)?);
     let tolerance = number_or(p, "tolerance", 3.0, C)?;
-    if !(x.is_finite() && y.is_finite()) || !(tolerance >= 0.0 && tolerance.is_finite()) {
+    if !(x.is_finite() && y.is_finite() && tolerance >= 0.0 && tolerance.is_finite()) {
         return Err(bad(C, "give `x` and `y` (and a `tolerance` of 0 or more)"));
     }
     let path = s.doc()?.doc.node(id).and_then(|n| n.path_data()).ok_or_else(|| bad(C, "`id` is not a path"))?;
