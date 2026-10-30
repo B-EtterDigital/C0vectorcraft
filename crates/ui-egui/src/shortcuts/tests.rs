@@ -1094,6 +1094,104 @@ fn cmd_alt_shift_period_and_comma_step_the_font_size_by_five() {
     assert_eq!(sizes(&mut app), [(json!("One "), json!(14.0)), (json!("Two"), json!(24.0))]);
 }
 
+/// Spacing arrow keys change tracking, leading, and baseline shift for a selected vertical text object.
+#[test]
+fn alt_arrows_rotate_for_selected_vertical_type() {
+    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
+    let vertical = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "One Two", "size": 20, "vertical": true})).unwrap()["id"]
+        .as_u64()
+        .unwrap();
+    app.select_tool("selection");
+    app.session.execute("select.set", &json!({"ids": [vertical]})).unwrap();
+    let press = |key, modifiers| egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers };
+    let cases = [
+        (Key::ArrowDown, Modifiers::ALT, "tracking", 20.0),
+        (Key::ArrowUp, Modifiers::ALT, "tracking", 0.0),
+        (Key::ArrowLeft, Modifiers::ALT, "leading", 26.0),
+        (Key::ArrowRight, Modifiers::ALT, "leading", 24.0),
+        (Key::ArrowRight, Modifiers::ALT | Modifiers::SHIFT, "baseline_shift", 2.0),
+        (Key::ArrowLeft, Modifiers::ALT | Modifiers::SHIFT, "baseline_shift", 0.0),
+        (Key::ArrowDown, Modifiers::ALT | Modifiers::COMMAND, "tracking", 100.0),
+        (Key::ArrowUp, Modifiers::ALT | Modifiers::COMMAND, "tracking", 0.0),
+    ];
+    for (key, modifiers, field, value) in cases {
+        frame(&mut app, vec![egui::Event::ModifiersChanged(modifiers), press(key, modifiers)]);
+        let range = app.session.execute("text.getRange", &json!({"id": vertical})).unwrap();
+        assert_eq!(range["runs"][0]["style"][field], json!(value), "{key:?}");
+        assert_eq!(app.session.active().unwrap().selection.objects, [vectorcraft_doc::NodeId(vertical)]);
+    }
+}
+
+#[test]
+fn mixed_type_objects_take_horizontal_spacing_chords_in_both_orders() {
+    let press = |key, modifiers| egui::Event::Key { key, physical_key: None, pressed: true, repeat: false, modifiers };
+    for vertical_first in [true, false] {
+        let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+        app.session.execute("file.new", &json!({"width": 200, "height": 200})).unwrap();
+        let vertical = app.session.execute("text.create", &json!({"x": 20, "y": 50, "text": "One", "size": 20, "vertical": true})).unwrap()["id"]
+            .as_u64()
+            .unwrap();
+        let horizontal = app.session.execute("text.create", &json!({"x": 80, "y": 50, "text": "Two", "size": 20})).unwrap()["id"].as_u64().unwrap();
+        let ids = if vertical_first { [vertical, horizontal] } else { [horizontal, vertical] };
+        app.select_tool("type");
+        app.session.execute("select.set", &json!({"ids": ids})).unwrap();
+        let before = app.session.active().unwrap().history.undo.len();
+        let original = ids.map(|id| app.session.execute("text.getRange", &json!({"id": id})).unwrap());
+        frame(&mut app, vec![egui::Event::ModifiersChanged(Modifiers::ALT), press(Key::ArrowDown, Modifiers::ALT)]);
+        for id in ids {
+            let range = app.session.execute("text.getRange", &json!({"id": id})).unwrap();
+            assert_eq!(range["runs"][0]["style"]["leading"], json!(26.0));
+        }
+        assert_eq!(app.session.active().unwrap().history.undo.len(), before + 1);
+        assert_eq!(app.session.active().unwrap().selection.objects.len(), 2);
+        app.session.execute("edit.undo", &json!({})).unwrap();
+        for (id, expected) in ids.into_iter().zip(original) {
+            let range = app.session.execute("text.getRange", &json!({"id": id})).unwrap();
+            assert_eq!(range, expected);
+        }
+        app.session.execute("edit.redo", &json!({})).unwrap();
+        for id in ids {
+            let range = app.session.execute("text.getRange", &json!({"id": id})).unwrap();
+            assert_eq!(range["runs"][0]["style"]["leading"], json!(26.0));
+        }
+        frame(&mut app, vec![egui::Event::ModifiersChanged(Modifiers::ALT), press(Key::ArrowRight, Modifiers::ALT)]);
+        for id in ids {
+            let range = app.session.execute("text.getRange", &json!({"id": id})).unwrap();
+            assert_eq!(range["runs"][0]["style"]["tracking"], json!(20.0));
+        }
+        assert_eq!(app.session.active().unwrap().selection.objects.len(), 2);
+    }
+}
+
+#[test]
+fn selected_vertical_area_and_path_type_use_vertical_spacing_chords() {
+    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    app.session.execute("file.new", &json!({"width": 300, "height": 300})).unwrap();
+    let area_frame = app.session.execute("path.create", &json!({"d": "M10 10 L100 10 L100 100 L10 100 Z"})).unwrap()["id"].as_u64().unwrap();
+    let path = app.session.execute("path.create", &json!({"d": "M150 10 L250 10"})).unwrap()["id"].as_u64().unwrap();
+    let area =
+        app.session.execute("text.createInPath", &json!({"path": area_frame, "mode": "area", "text": "Area", "vertical": true, "size": 20})).unwrap()
+            ["id"]
+            .as_u64()
+            .unwrap();
+    let on_path = app
+        .session
+        .execute("text.createInPath", &json!({"path": path, "mode": "onPath", "text": "Path", "vertical": true, "size": 20}))
+        .unwrap()["id"]
+        .as_u64()
+        .unwrap();
+    app.select_tool("selection");
+    app.session.execute("select.set", &json!({"ids": [area, on_path]})).unwrap();
+    let modifiers = Modifiers::ALT;
+    let press = egui::Event::Key { key: Key::ArrowDown, physical_key: None, pressed: true, repeat: false, modifiers };
+    frame(&mut app, vec![egui::Event::ModifiersChanged(modifiers), press]);
+    for id in [area, on_path] {
+        let range = app.session.execute("text.getRange", &json!({"id": id})).unwrap();
+        assert_eq!(range["runs"][0]["style"]["tracking"], json!(20.0));
+    }
+}
+
 /// #3786: Alt+arrows step a selected text object's spacing instead of copying and nudging it.
 #[test]
 fn alt_arrows_step_selected_type_object() {
