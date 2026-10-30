@@ -381,7 +381,7 @@ fn single_key_shortcuts(app: &mut VectorcraftApp, ctx: &egui::Context) {
             None if hit.params.is_null() => {
                 let _ = app.run(&hit.id, json!({}));
             }
-            None => crate::menus::invoke(app, &hit.id, hit.params.clone()),
+            None => crate::menus::invoke(app, &hit.id, shortcut_params(hit)),
         }
     }
 }
@@ -729,6 +729,37 @@ fn dispatch(app: &mut VectorcraftApp, ctx: &egui::Context, accept: impl FnMut(&H
     })
 }
 
+/// Params used when a shortcut invokes its command. The named panel function keys retain their
+/// toggle action when their bindings are reassigned.
+fn shortcut_params(c: &CommandRef) -> serde_json::Value {
+    let mut params = if c.params.is_null() { json!({}) } else { c.params.clone() };
+    if c.id == "window.panel"
+        && matches!(
+            params.get("panel").and_then(serde_json::Value::as_str),
+            Some(
+                "brushes"
+                    | "color"
+                    | "layers"
+                    | "info"
+                    | "gradient"
+                    | "stroke"
+                    | "attributes"
+                    | "graphicStyles"
+                    | "appearance"
+                    | "align"
+                    | "transform"
+                    | "pathfinder"
+                    | "transparency"
+                    | "symbols"
+            )
+        )
+    {
+        params["toggle"] = json!(true);
+        params["toggleGroup"] = json!(true);
+    }
+    params
+}
+
 /// Runs what a shortcut is bound to: a tool, a panel (`window.panel {panel}`) or a command.
 fn run_hit(app: &mut VectorcraftApp, ctx: &egui::Context, c: &CommandRef) {
     if let Some(tool) = c.id.strip_prefix("tool:") {
@@ -738,8 +769,7 @@ fn run_hit(app: &mut VectorcraftApp, ctx: &egui::Context, c: &CommandRef) {
         // every artboard instead of the art.
         crate::panels::artboards::select_all(app);
     } else {
-        let p = if c.params.is_null() { json!({}) } else { c.params.clone() };
-        crate::menus::invoke(app, &c.id, p);
+        crate::menus::invoke(app, &c.id, shortcut_params(c));
     }
 }
 
