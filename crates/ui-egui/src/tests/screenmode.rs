@@ -223,6 +223,54 @@ fn a_tool_drag_takes_escape_before_full_screen_exits() {
     assert_eq!(app.ui.screen_mode, 0);
 }
 
+fn navigation_drag_keeps_screen_mode(kind: &str) {
+    for mode in [1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        let button = match kind {
+            "hand" => {
+                app.select_tool("hand");
+                egui::PointerButton::Primary
+            }
+            "middle" => egui::PointerButton::Middle,
+            "zoom_box" => {
+                app.select_tool("zoom");
+                app.session.prefs.animated_zoom = false;
+                egui::PointerButton::Primary
+            }
+            _ => panic!("unknown navigation drag"),
+        };
+        frame(&mut app, &ctx, vec![]);
+        let start = app.canvas_rect.unwrap().center();
+        let end = start + egui::vec2(35.0, 20.0);
+        let pointer = |pos, pressed| egui::Event::PointerButton { pos, button, pressed, modifiers: Default::default() };
+        frame(&mut app, &ctx, vec![egui::Event::PointerMoved(start), pointer(start, true)]);
+        frame(&mut app, &ctx, vec![egui::Event::PointerMoved(end)]);
+        assert!(crate::canvas::dragging(&ctx), "{kind} drag began in mode {mode}");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, mode, "{kind} drag holds Escape in mode {mode}");
+        frame(&mut app, &ctx, vec![pointer(end, false)]);
+        assert!(!crate::canvas::dragging(&ctx), "{kind} drag ended in mode {mode}");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "Escape after {kind} drag in mode {mode}");
+    }
+}
+
+#[test]
+fn a_hand_drag_keeps_both_full_screen_modes_until_release() {
+    navigation_drag_keeps_screen_mode("hand");
+}
+
+#[test]
+fn a_middle_button_pan_keeps_both_full_screen_modes_until_release() {
+    navigation_drag_keeps_screen_mode("middle");
+}
+
+#[test]
+fn a_zoom_box_drag_keeps_both_full_screen_modes_until_release() {
+    navigation_drag_keeps_screen_mode("zoom_box");
+}
+
 #[test]
 fn a_ruler_origin_drag_takes_escape_before_full_screen_exits() {
     for mode in [1, 2] {
