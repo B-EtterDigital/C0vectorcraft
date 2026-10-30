@@ -1,4 +1,4 @@
-use super::exporter::{UNDECODED, q, writable, xf};
+use super::exporter::{UNDECODED, UNWRITABLE_IMAGE, q, writable, xf};
 use super::{Arc, BlendMode, Color, Exporter, Image, NodeKind, Paint, Rect, Size, Surface, cmyk, krilla};
 use krilla::color::device_n::{Colorant, DeviceNSpace, Process};
 use krilla::image::{BitsPerComponent, CustomImage, ImageColorspace};
@@ -197,10 +197,23 @@ impl Exporter<'_> {
     pub(super) fn image(&mut self, s: &mut Surface, im: &vectorcraft_doc::ImageObject, img: Option<Image>, pixelated: bool) {
         // An image placed or sized beyond [`MAX_COORD`] is left out.
         if !writable(s, im.xf, Rect::new(0.0, 0.0, im.width.max(1).into(), im.height.max(1).into())) {
+            if self.image_left_out.is_some() {
+                self.image_left_out = Some(true);
+                self.warn(UNWRITABLE_IMAGE);
+            }
             return;
         }
-        let Some(img) = img.or_else(|| self.load_image(im, placed_size(im), !pixelated)) else { return };
-        let Some(size) = Size::from_wh(im.width.max(1) as f32, im.height.max(1) as f32) else { return };
+        let Some(img) = img.or_else(|| self.load_image(im, placed_size(im), !pixelated)) else {
+            self.image_left_out = self.image_left_out.map(|_| true);
+            return;
+        };
+        let Some(size) = Size::from_wh(im.width.max(1) as f32, im.height.max(1) as f32) else {
+            if self.image_left_out.is_some() {
+                self.image_left_out = Some(true);
+                self.warn(UNWRITABLE_IMAGE);
+            }
+            return;
+        };
         s.push_transform(&xf(im.xf));
         s.draw_image(img, size);
         s.pop();
