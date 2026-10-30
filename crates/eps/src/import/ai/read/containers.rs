@@ -19,6 +19,7 @@ impl<'a> Reader<'a> {
             children: Vec::new(),
             hidden,
             after: self.after_object,
+            mesh_ended: self.mesh_ended,
             gs: self.gs.clone(),
             base,
             clips: Vec::new(),
@@ -243,6 +244,7 @@ impl<'a> Reader<'a> {
         let art = self.new_node(NodeKind::Group { children, clip }, &f.gs);
         self.gs = f.gs;
         self.after_object = f.after;
+        self.mesh_ended = f.mesh_ended;
         let Some(Frame { kind: Kind::Obj(o), .. }) = self.frames.last_mut() else {
             return Err("mask art ends outside a mask dictionary".into());
         };
@@ -258,13 +260,15 @@ impl<'a> Reader<'a> {
             return Ok(());
         }
         let Some(f) = self.frames.pop() else { return Ok(()) };
-        let Frame { kind, children, base, hidden, gs, after, .. } = f;
+        let Frame { kind, children, base, hidden, gs, after, mesh_ended, .. } = f;
         let Kind::Obj(mut o) = kind else { return Ok(()) };
         obj::close(&mut o, &mut self.stack, base);
         self.obj_hidden = hidden;
-        // Art made inside a dictionary (type's paths) isn't kept.
+        // Art made inside a dictionary (type's paths, a mask's art) isn't kept, and doesn't end what
+        // follows the object the dictionary is about: a mesh's state comes after its mask.
         self.gs = gs;
         self.after_object = after;
+        self.mesh_ended = mesh_ended;
         if matches!(self.frames.last(), Some(Frame { kind: Kind::Obj(_), .. })) {
             return self.push(V::Obj(Rc::new(*o)));
         }

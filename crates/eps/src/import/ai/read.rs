@@ -183,7 +183,8 @@ struct Reader<'a> {
     blend_budget: usize,
     /// A group just ended, its state (`Xy`, `Xd`, `XW`) not yet read.
     group_ended: bool,
-    /// A gradient mesh just ended (`/End X!`), its own state (`Xy`) not yet read.
+    /// A gradient mesh just ended (`/End X!`), its own state (`Xy`) not yet read: also after its
+    /// dictionary (its name, its opacity mask and the mask's art).
     mesh_ended: bool,
     /// A layer's own state (`Xy` after its art, before `LB`), until something says the art moves on.
     layer_state: Option<(f32, BlendMode, bool, Knockout)>,
