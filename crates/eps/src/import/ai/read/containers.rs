@@ -403,6 +403,8 @@ impl<'a> Reader<'a> {
                 self.warn(crate::import::ai::blend::DRAWN);
             }
         }
+        // The blend's own state block follows its record, as a group's follows its end.
+        self.after_object = true;
     }
 }
 

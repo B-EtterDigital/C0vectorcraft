@@ -1969,6 +1969,25 @@ fn a_blend_it_cant_read_keeps_its_drawn_steps() {
     }
 }
 
+/// A blend's transparency (here knockout on, as blends are written) is the state block after its
+/// record, as a group's follows its end: the live blend's, or its drawn steps' where they stay. It
+/// is the blend's own, not the next object's.
+#[test]
+fn a_blends_transparency_follows_its_record() {
+    let state = "0 0.6 0 1 0 Xy\n0 0 Xd\n6 () XW\n";
+    let next = format!("0 1 0 0 0 Xy\n{RED}{}f\n", rect_path(150.0, 40.0, 170.0, 60.0));
+    let straight = "%_10 50 m\n%_110 50 L\n";
+    let garbled = "(Adobe Path Blends) 1 0 16 XP\n%00112233445566778899AABBCCDDEEFF\n".to_string();
+    for (record, live) in [(blend_record(&['A', 'B']), true), (garbled, false)] {
+        let body = format!("{}{state}{next}", blend_file(straight, [Some("A"), Some("B")], &record));
+        let a = art(&read_ok(&layer(&body)).doc);
+        assert_eq!(a.len(), 2, "{a:?}");
+        assert_eq!(matches!(a[0].kind, NodeKind::Blend { .. }), live, "{:?}", a[0].kind);
+        assert_eq!((a[0].opacity, a[0].knockout), (0.6, Knockout::On), "live: {live}");
+        assert_eq!(a[1].opacity, 1.0, "the next object's own state");
+    }
+}
+
 /// The blend is live: moving a key moves the steps between it and the other key with it.
 #[test]
 fn moving_a_blends_key_moves_its_steps() {
