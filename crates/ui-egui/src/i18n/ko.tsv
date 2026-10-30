@@ -3354,7 +3354,7 @@ gradient-kind	Radial	방사형
 	Client-side (.html)	클라이언트 측 (.html)
 	Cmd	Cmd
 	Collect Links in a Separate Folder	링크를 별도 폴더에 모으기
-	Color (,)	색상 (,)
+	Color (, or <)	색상 (, 또는 <)
 	Color Group	색상 그룹
 	Color Library	색상 라이브러리
 	Color Management	색상 관리
@@ -3449,7 +3449,7 @@ file-filter	Templates	템플릿
 	General › Placement › X	일반 › 배치 › X
 	General › Thumbnails	일반 › 축소판
 	Global Process Color, CMYK	글로벌 프로세스 색상, CMYK
-	Gradient (.)	그레이디언트 (.)
+	Gradient (. or >)	그레이디언트 (. 또는 >)
 	Graph Data	그래프 데이터
 	Graph Type	그래프 유형
 	Graph Design	그래프 디자인

@@ -3368,7 +3368,7 @@ gradient-kind	Radial	円形
 	Client-side (.html)	クライアントサイド (.html)
 	Cmd	Cmd
 	Collect Links in a Separate Folder	リンクを別フォルダーに収集
-	Color (,)	カラー (,)
+	Color (, or <)	カラー (, または <)
 	Color Group	カラーグループ
 	Color Library	カラーライブラリ
 	Color Management	カラーマネジメント
@@ -3463,7 +3463,7 @@ file-filter	Templates	テンプレート
 	General › Placement › X	一般 › 位置 › X
 	General › Thumbnails	一般 › サムネール
 	Global Process Color, CMYK	グローバルプロセスカラー、CMYK
-	Gradient (.)	グラデーション (.)
+	Gradient (. or >)	グラデーション (. または >)
 	Graph Data	グラフデータ
 	Graph Type	グラフの種類
 	Graph Design	グラフのデザイン

@@ -708,7 +708,7 @@
 	Collect in New Layer	Recull en una capa nova
 	Collect Links in a Separate Folder	Recull els enllaços en una carpeta a part
 	Color	Color
-	Color (,)	Color (,)
+	Color (, or <)	Color (, o <)
 	Color Adjustments	Ajustos de color
 	Color bars	Barres de color
 	Color blindness – Deuteranopia-type	Daltonisme – tipus deuteranòpsia
@@ -1691,7 +1691,7 @@
 	GPU Performance	Rendiment de la GPU
 	Grab bag	Calaix de sastre
 	Gradient	Degradat
-	Gradient (.)	Degradat (.)
+	Gradient (. or >)	Degradat (. o >)
 	Gradient across stroke	Degradat transversal al traç
 	Gradient along stroke	Degradat al llarg del traç
 	Gradient and Mesh Resolution:	Resolució de degradat i malla:

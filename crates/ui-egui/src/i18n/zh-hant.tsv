@@ -471,7 +471,7 @@ font-technology	Variable	可變
 	Collect in New Layer	收集至新圖層
 	Collect Links in a Separate Folder	將連結收集到獨立的資料夾
 	Color	顏色
-	Color (,)	顏色 (,)
+	Color (, or <)	顏色 (, 或 <)
 	Color Adjustments	色彩調整
 	Color bars	色彩條
 	Color blindness – Deuteranopia-type	色盲 – 綠色盲型
@@ -1247,7 +1247,7 @@ file-filter	Templates	範本
 	GPL palettes keep solid colours only, as RGB.	GPL 調色盤僅保留純色，並以 RGB 儲存。
 	GPU Performance	GPU 效能
 	Gradient	漸層
-	Gradient (.)	漸層 (.)
+	Gradient (. or >)	漸層 (. 或 >)
 	Gradient across stroke	橫跨筆畫的漸層
 	Gradient along stroke	沿筆畫的漸層
 	Gradient and Mesh Resolution:	漸層與網格解析度：

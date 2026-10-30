@@ -1209,12 +1209,12 @@ lighting	Light	Světlo
 	 to set spacing and orientation	 nastaví rozestupy a orientaci
 	Apply	Použít
 	Change Screen Mode (F)	Změnit režim obrazovky (F)
-	Color (,)	Barva (,)
+	Color (, or <)	Barva (, nebo <)
 	Draw Behind	Kreslit za
 	Draw Inside	Kreslit dovnitř
 	Draw Normal	Kreslit normálně
 	Expand:	Rozložit:
-	Gradient (.)	Přechod (.)
+	Gradient (. or >)	Přechod (. nebo >)
 	H:	V:
 	Modify	Úpravy
 	Navigate	Pohled

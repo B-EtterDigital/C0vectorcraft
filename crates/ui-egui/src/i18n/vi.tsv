@@ -591,7 +591,7 @@ font-technology	Variable	Biến thiên
 	Collect in New Layer	Thu thập vào lớp mới
 	Collect Links in a Separate Folder	Thu thập liên kết vào thư mục riêng
 	Color	Màu
-	Color (,)	Màu (,)
+	Color (, or <)	Màu (, hoặc <)
 	Color Adjustments	Điều chỉnh màu sắc
 	Color bars	Thanh màu
 	Color blindness – Deuteranopia-type	Mù màu – loại Deuteranopia
@@ -1491,7 +1491,7 @@ file-filter	Templates	Mẫu
 	GPU Performance	Hiệu suất GPU
 	Grab bag	Tổng hợp
 	Gradient	Chuyển sắc
-	Gradient (.)	Chuyển sắc (.)
+	Gradient (. or >)	Chuyển sắc (. hoặc >)
 	Gradient across stroke	Chuyển sắc ngang qua nét
 	Gradient along stroke	Chuyển sắc dọc theo nét
 	Gradient and Mesh Resolution:	Độ phân giải chuyển sắc và lưới:

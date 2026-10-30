@@ -679,7 +679,7 @@ font-technology	Variable	Változó
 	Collect in New Layer	Összegyűjtés új rétegbe
 	Collect Links in a Separate Folder	Csatolások gyűjtése külön mappába
 	Color	Szín
-	Color (,)	Szín (,)
+	Color (, or <)	Szín (, vagy <)
 	Color Adjustments	Színkorrekciók
 	Color bars	Színsávok
 	Color blindness – Deuteranopia-type	Színvakság – deuteranópia
@@ -1591,7 +1591,7 @@ file-filter	Templates	Sablonok
 	GPU Performance	GPU-teljesítmény
 	Grab bag	Vegyes
 	Gradient	Színátmenet
-	Gradient (.)	Színátmenet (.)
+	Gradient (. or >)	Színátmenet (. vagy >)
 	Gradient across stroke	Színátmenet a körvonalon keresztben
 	Gradient along stroke	Színátmenet a körvonal mentén
 	Gradient and Mesh Resolution:	Színátmenet és háló felbontása:

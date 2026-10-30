@@ -495,7 +495,7 @@ font-technology	Variable	Променливи
 	Collect in New Layer	Събиране в нов слой
 	Collect Links in a Separate Folder	Събиране на връзките в отделна папка
 	Color	Цвят
-	Color (,)	Цвят (,)
+	Color (, or <)	Цвят (, или <)
 	Color Adjustments	Цветови корекции
 	Color bars	Цветови скали
 	Color blindness – Deuteranopia-type	Цветна слепота – тип девтеранопия
@@ -1236,7 +1236,7 @@ font-technology	Variable	Променливи
 	GPL palettes keep solid colours only, as RGB.	Палитрите GPL запазват само плътни цветове като RGB.
 	GPU Performance	Производителност на графичния процесор
 	Gradient	Градиент
-	Gradient (.)	Градиент (.)
+	Gradient (. or >)	Градиент (. или >)
 	Gradient across stroke	Градиент напречно на щриха
 	Gradient along stroke	Градиент по дължината на щриха
 	Gradient and Mesh Resolution:	Разделителна способност на градиент и мрежа:

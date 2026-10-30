@@ -509,7 +509,7 @@ font-technology	Variable	Variables
 	Collect in New Layer	Reunir en capa nueva
 	Collect Links in a Separate Folder	Reunir vínculos en una carpeta aparte
 	Color	Color
-	Color (,)	Color (,)
+	Color (, or <)	Color (, o <)
 	Color Adjustments	Ajustes de color
 	Color bars	Barras de color
 	Color blindness – Deuteranopia-type	Daltonismo – tipo deuteranopía
@@ -1273,7 +1273,7 @@ font-technology	Variable	Variables
 	GPL palettes keep solid colours only, as RGB.	Las paletas GPL solo conservan colores sólidos, en RGB.
 	GPU Performance	Rendimiento de GPU
 	Gradient	Degradado
-	Gradient (.)	Degradado (.)
+	Gradient (. or >)	Degradado (. o >)
 	Gradient across stroke	Degradado a lo ancho del trazo
 	Gradient along stroke	Degradado a lo largo del trazo
 	Gradient and Mesh Resolution:	Resolución de degradados y mallas:

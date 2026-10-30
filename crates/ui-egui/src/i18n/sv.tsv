@@ -497,7 +497,7 @@ font-technology	Variable	Variabla
 	Collect in New Layer	Samla i nytt lager
 	Collect Links in a Separate Folder	Samla länkar i en separat mapp
 	Color	Färg
-	Color (,)	Färg (,)
+	Color (, or <)	Färg (, eller <)
 	Color Adjustments	Färgjusteringar
 	Color bars	Färgstaplar
 	Color blindness – Deuteranopia-type	Färgblindhet – deuteranopi
@@ -1238,7 +1238,7 @@ font-technology	Variable	Variabla
 	GPL palettes keep solid colours only, as RGB.	GPL-paletter sparar bara enfärgade färger, som RGB.
 	GPU Performance	GPU-prestanda
 	Gradient	Gradient
-	Gradient (.)	Gradient (.)
+	Gradient (. or >)	Gradient (. eller >)
 	Gradient across stroke	Gradient tvärs över konturen
 	Gradient along stroke	Gradient längs konturen
 	Gradient and Mesh Resolution:	Upplösning för gradienter och nät:

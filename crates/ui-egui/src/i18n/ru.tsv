@@ -507,7 +507,7 @@ font-technology	Variable	Вариативные
 	Collect in New Layer	Собрать в новый слой
 	Collect Links in a Separate Folder	Собрать связи в отдельную папку
 	Color	Цвет
-	Color (,)	Цвет (,)
+	Color (, or <)	Цвет (, или <)
 	Color Adjustments	Настройки цвета
 	Color bars	Цветные полосы
 	Color blindness – Deuteranopia-type	Дальтонизм — дейтеранопия
@@ -1281,7 +1281,7 @@ file-filter	Templates	Шаблоны
 	GPL palettes keep solid colours only, as RGB.	Палитры GPL сохраняют только сплошные цвета в RGB.
 	GPU Performance	Производительность GPU
 	Gradient	Градиент
-	Gradient (.)	Градиент (.)
+	Gradient (. or >)	Градиент (. или >)
 	Gradient across stroke	Градиент поперёк обводки
 	Gradient along stroke	Градиент вдоль обводки
 	Gradient and Mesh Resolution:	Разрешение градиентов и сеток:

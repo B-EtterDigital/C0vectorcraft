@@ -455,7 +455,7 @@
 	Collect in New Layer	收集到新图层
 	Collect Links in a Separate Folder	将链接收集到单独的文件夹
 	Color	颜色
-	Color (,)	颜色 (,)
+	Color (, or <)	颜色 (, 或 <)
 	Color Adjustments	色彩调整
 	Color bars	色彩条
 	Color blindness – Deuteranopia-type	色盲 – 绿色盲型
@@ -1221,7 +1221,7 @@ file-filter	Templates	模板
 	GPL palettes keep solid colours only, as RGB.	GPL 调板仅保留为 RGB 的纯色。
 	GPU Performance	GPU 性能
 	Gradient	渐变
-	Gradient (.)	渐变 (.)
+	Gradient (. or >)	渐变 (. 或 >)
 	Gradient across stroke	横跨描边的渐变
 	Gradient along stroke	沿描边的渐变
 	Gradient and Mesh Resolution:	渐变和网格分辨率：
