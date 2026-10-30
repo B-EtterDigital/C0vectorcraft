@@ -506,6 +506,26 @@ fn frame(app: &mut VectorcraftApp, ctx: &egui::Context, events: Vec<egui::Event>
     out.textures_delta.clear();
 }
 
+#[test]
+fn bucket_modifier_only_hover_updates_the_visible_cursor() {
+    use egui::{Event, Modifiers};
+    use vectorcraft_tools::Cursor;
+
+    let mut app = VectorcraftApp::new(Session::new(), Default::default());
+    app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+    app.select_tool("livePaintBucket");
+    let ctx = egui::Context::default();
+    frame(&mut app, &ctx, vec![]);
+    let at = app.canvas_rect.unwrap().center();
+    let shown = |app: &mut VectorcraftApp, events| {
+        frame(app, &ctx, events);
+        app.canvas.hover_cursor.map(|(_, _, cursor)| cursor)
+    };
+    assert_eq!(shown(&mut app, vec![Event::PointerMoved(at)]), Some(Cursor::LivePaintBucket));
+    assert_eq!(shown(&mut app, vec![Event::ModifiersChanged(Modifiers::ALT)]), Some(Cursor::Eyedropper));
+    assert_eq!(shown(&mut app, vec![Event::ModifiersChanged(Modifiers::NONE)]), Some(Cursor::LivePaintBucket));
+}
+
 /// The Image Trace panel's eye-button hold ends when the pointer is released, even when the
 /// panel stopped drawing while the button was held, so a later press on the canvas does not
 /// show the source image.

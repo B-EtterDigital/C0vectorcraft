@@ -2245,7 +2245,13 @@ reads as Add.
 The Eyedropper: `appearance.copyFrom {source}` copies what the Eyedropper Options pick up and apply from `source` to the
 selection (`ids`); `reverse: true` copies the selection's attributes onto `source` (Alt-click), or with nothing selected
 what the last copy without `reverse` picked up (a copy made then, kept for the session), and `append: true` adds
-the source's fills and strokes on top of each target's stack (Shift+Alt-click). The options live in the preferences:
+the source's fills and strokes on top of each target's stack (Shift+Alt-click). `defaultsOnly: true` copies the enabled
+fill, stroke and weight into paint defaults without changing selected art; it cannot be combined with `ids`, `reverse`
+or `append`. The Live Paint Bucket uses this for Alt-click sampling on vector art. On an image, it uses
+`paint.sampleColor {color, stroke: false, ids: [], clearStroke: true}` to set a solid fill default from the sampled
+pixel and clear the stroke default. `clearStroke: true` requires `stroke: false`, `ids: []` and no `stop`.
+Alt+Shift-click samples only the color at the pointer into the active paint default through
+`paint.sampleColor {color, ids: []}`. The options live in the preferences:
 `eyedropper.setOptions {sampleSize?, pickUp?, apply?}` (or `prefs.get`/`prefs.set` with key `eyedropper`) reads and
 sets them; a tree names flags under `appearance` (`transparency`, `fill` `{color, transparency, overprint}`, `stroke`
 `{color, transparency, overprint, weight, cap, join, miter, dash}`), `character` and `paragraph`, and a bool for a
