@@ -2,7 +2,7 @@ use super::compare::{MAX_DIFFERENCE, PageView, compare};
 use super::plan::plan;
 use super::slots::{
     ART_LEFT_OUT, Content, MAX_PAIRS, MAX_SLOTS, MAX_TEXT, OUTLINE_REACH, TEXT_LEFT_OUT, TYPE_LEFT_OUT, collect_slots, extent, few, fill_slots,
-    text_objects,
+    letters, text_objects, words,
 };
 use super::{Affine, Arc, BTreeSet, Document, Node, NodeId, NodeKind, PathData, Rect, Scaling, Story, Structure, Texts, Unit, Vec2, ai};
 
@@ -178,14 +178,9 @@ pub(super) fn build_from(
     if outlined && infos.iter().any(|i| i.shown) {
         return Err("its type is to come in as outlines, which only its page has".into());
     }
-    if infos.iter().all(|i| !i.shown) && !shown.is_empty() {
-        if !in_placed_files(&shown, &doc, &placed_elsewhere) {
-            return Err("its page has text, and its layers have no text objects to put it in".into());
-        }
-        // The page's type is all inside placed files: it is theirs, which their previews show, and
-        // needs no text object.
-        shown.clear();
-    }
+    // The page's type that needs no text object of the layers: the layers' own legacy text, or
+    // placed files that show it.
+    let as_outlines = page_type_elsewhere(infos.is_empty(), infos.iter().all(|i| !i.shown), &mut shown, &mut hidden, &doc, &placed_elsewhere)?;
     // The page's type is compared with every text object of the layers: that has its limits.
     if infos.len() > MAX_SLOTS || infos.len().saturating_mul(shown.len()) > MAX_PAIRS {
         return Err("it has too many text objects".into());
@@ -232,6 +227,9 @@ pub(super) fn build_from(
     }
     if short > 0 {
         notes.push(format!("{short} {PAGE_TYPE_WITHOUT_OUTLINES}"));
+    }
+    if as_outlines > 0 {
+        notes.push(format!("{as_outlines} {PAGE_TYPE_AS_OUTLINES}"));
     }
     if !hidden_unread.is_empty() {
         notes.push(format!("{ART_LEFT_OUT} ({}), left out of them", few(hidden_unread)));
@@ -302,6 +300,71 @@ fn elsewhere(doc: &Document, placed: &[(NodeId, Affine)]) -> Option<Document> {
         }
     }
     Some(doc)
+}
+
+/// The page's type that needs no text object of the layers, taken out of `shown` and `hidden` (the
+/// page's text objects that show and that don't): how many of them the layers have as outlines.
+/// Type in the legacy format (`To` … `TO`, as files saved for Illustrator 10 and earlier keep it)
+/// is read as text objects of the layers' own, with no slot (`no_slots`) for the page's type; the
+/// page's type that their words don't hold is outlines on the layers, and the comparison with the
+/// page says whether they draw it. Without such text and with no slot that shows (`none_shown`),
+/// the page's type must all lie inside placed files, which show it.
+fn page_type_elsewhere(
+    no_slots: bool,
+    none_shown: bool,
+    shown: &mut Vec<Vec<Arc<Node>>>,
+    hidden: &mut Vec<Vec<Arc<Node>>>,
+    doc: &Document,
+    placed: &[(NodeId, Affine)],
+) -> Result<usize, String> {
+    let mut own = vec![];
+    own_text(&doc.layers, &mut own);
+    let mut as_outlines = 0;
+    if no_slots && !own.is_empty() {
+        as_outlines = shown.iter().filter(|o| !in_own_text(o, &own)).count();
+        shown.clear();
+        hidden.clear();
+    }
+    if none_shown && !shown.is_empty() && own.is_empty() {
+        if !in_placed_files(shown, doc, placed) {
+            return Err("its page has text, and its layers have no text objects to put it in".into());
+        }
+        // The page's type is all inside placed files: it is theirs, which their previews show, and
+        // needs no text object.
+        shown.clear();
+    }
+    Ok(as_outlines)
+}
+
+/// Is the page's text object `object` the layers' own text (`own`, from [`own_text`]): one with its
+/// words next to it? The rest of the page's type is what the editing data keeps as outlines (what
+/// the legacy format can't hold), and the comparison with the page says whether the layers draw it.
+fn in_own_text(object: &[Arc<Node>], own: &[(Rect, String)]) -> bool {
+    let Some(r) = extent(object) else { return false };
+    let near: String =
+        own.iter().filter(|(b, _)| !b.inflate(OUTLINE_REACH, OUTLINE_REACH).intersect(r).is_zero_area()).map(|(_, l)| l.as_str()).collect();
+    let page_words: Vec<String> = object
+        .iter()
+        .filter_map(|n| if let NodeKind::Text(t) = &n.kind { Some(words(&t.plain_text().to_lowercase())) } else { None })
+        .flatten()
+        .collect();
+    !near.is_empty() && page_words.iter().all(|w| near.contains(w.as_str()))
+}
+
+/// The text objects of their own (not slots for the page's type) that show in `nodes`: their
+/// bounds and their letters, in lower case.
+fn own_text(nodes: &[Arc<Node>], out: &mut Vec<(Rect, String)>) {
+    for n in nodes.iter().filter(|n| n.visible) {
+        match &n.kind {
+            NodeKind::Text(t) => out.extend(n.visual_bounds().map(|b| (b, letters(&t.plain_text().to_lowercase())))),
+            NodeKind::Compound { .. } => {}
+            _ => {
+                if let Some(c) = n.children() {
+                    own_text(c, out);
+                }
+            }
+        }
+    }
 }
 
 /// Has `r` the size of `page`'s first artboard (in points)?
@@ -377,6 +440,9 @@ const UNSEEN_TEXT: &str = "text objects that the file keeps but its page doesn't
 /// The text objects that hold the page's type next to glyphs the page kept as outlines, which are
 /// left out.
 const PAGE_TYPE_WITHOUT_OUTLINES: &str = "text objects hold their type as the page draws it, without the characters the page has only as outlines";
+
+/// The page's text objects that the layers have as outlines, as the editing data keeps them.
+const PAGE_TYPE_AS_OUTLINES: &str = "text objects of the page are outlines on the layers, as the file's editing data keeps them";
 
 /// How much more of the page (0 to 1) the layers may differ without a text object and still look no worse.
 const UNSEEN_MARGIN: f64 = 5e-5;
