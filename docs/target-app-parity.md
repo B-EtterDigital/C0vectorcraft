@@ -1,6 +1,6 @@
 # Parity with Adobe Illustrator
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-31 · **Change:** minor (supersampled raster exports avoid redundant compositing for opaque knockout fills; Path Precision Tools add-on: Corner Tool and Slide Anchor Along Path; scores unchanged) · **Target:** Adobe Illustrator 2026 (30.x; public release notes through 30.7, August 2026)
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-31 · **Change:** minor (Path Precision Tools add-on: Shared Edge Merge Tool; scores unchanged) · **Target:** Adobe Illustrator 2026 (30.x; public release notes through 30.7, August 2026)
 
 ## Feature submission evidence
 
@@ -1289,6 +1289,20 @@ and `addons::slide_anchor` in `vectorcraft-tools`, `cmd::addons::pathtools::test
 one undo step, bad params refused, the tools' gestures), `addons::pathtools::tests` in `vectorcraft-ui-egui` (submenu,
 panel section), `edit_toolbar::tests` and `command_sweep`.
 
+The add-on's Shared Edge Merge Tool (2026-10-31) works on any two editable paths under its round brush. Where they touch
+at two coincident anchors (tolerance 0 to 3 pt), hovering shows both stretches and the merged edge, and a click replaces
+both with it, half way between them, or following the upper (Shift) or lower (Alt) path; anchors either stretch has inside
+are matched on the other, both paths stay closed or open, and it is one undo step. Near anchors meet on a click and an
+anchor one path lacks is added to match. Keep Shared Points Together, an option in the Anchor Inspector, makes Slide Anchor
+Along Path, Extend Path and Set Anchor take coincident anchors along; nothing else in the app changes. Commands
+`addon.pathtools.mergeEdge` and `movePointsTogether`; `vectorcraft_pathops::addons::pathtools::apply_merge`. Not yet:
+growing to adjacent stretches, preview preferences, cycling three candidates, pairs at crossings without anchors, the
+tool's Alt-click cut and delete, and shared segments reshaping together. Tests: `addons::pathtools::shared_edge` in
+`vectorcraft-pathops` (the merged edge lies half way, topology, unequal anchors, stretches over a closed path's start,
+ends), `addons::shared_edge` in `vectorcraft-tools`, `cmd::addons::pathtools::shared_edge::tests` in `vectorcraft-engine`
+(one undo step, bad params refused, the tool's click, the option), `addons::pathtools::tests` in `vectorcraft-ui-egui`
+(submenu, panel section), `edit_toolbar::tests` and `command_sweep`.
+
 ## Smart Pen add-on (2026-10-30)
 
 A VectorCraft addition, not an Illustrator feature, so no area score moves. Object › Plug-ins › Smart Pen selects the
@@ -1338,6 +1352,7 @@ add-on.
 | Date | Change | Summary |
 |---|---|---|
 | 2026-10-30 | minor | File formats: `.ai`/EPS editing data: a blend takes the transparency (opacity, blend mode, knockout) in its state block after its record, so its steps knock each other out as the page draws them; a user's file comes in 0.6% from its page instead of 1.3%. Scores and estimates unchanged. |
+| 2026-10-31 | minor | Path Precision Tools add-on: the Shared Edge Merge Tool and Keep Shared Points Together; evidence added; scores unchanged. |
 | 2026-10-31 | minor | Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path; evidence added; scores unchanged. |
 | 2026-10-30 | patch | Performance: opaque solid-fill knockout paths avoid redundant erase/add compositing in hard-edge frames, including supersampled raster export; analytical antialiasing keeps its existing rounding; scores and estimates unchanged |
 | 2026-10-30 | minor | File formats: `.ai`/EPS editing-data fidelity from an audit of a user's files: All Caps and Small Caps (#4708); placed files at their box's corner, kept where they draw closer to the page (#4664, #4723, #4742); pages cropped to the art, with `UserUnit` (#4658, #4727); gradient mesh corners with handle weights of 0 and the state written after a mesh (#4738, #4744, #4748); type on a path spaced as the file lays it out (#4743); synthetic regressions in `crates/eps`; evidence added; scores unchanged. |
