@@ -72,13 +72,7 @@ impl<'a> Reader<'a> {
             "X+" => return Ok(()),
             _ => {}
         }
-        // What follows an object (its name, transparency and style) ends with anything else. The
-        // state block of a layer whose art ended (`Xy`, `Xd`, `XW`, then `LB`) is read at the `LB`.
-        if !matches!(w, "Xy" | "Xd" | "XW" | "BB" | "LB") {
-            self.after_object = false;
-            self.layer_state = None;
-            self.mesh_undo = None;
-        }
+        self.state_block_continues(w);
         let group_ended = std::mem::take(&mut self.group_ended);
         let mesh_ended = std::mem::take(&mut self.mesh_ended);
         let vals = self.operands();
@@ -396,6 +390,22 @@ impl<'a> Reader<'a> {
         });
     }
 
+    /// Operator `w` ends what follows an object (its name, transparency and style) unless it is part
+    /// of a state block.
+    /// The state block of a layer whose art ended (`Xy`, `Xd`, `XW`, then `LB`) is read at the
+    /// `LB`, and can have the stroke style between its `Xy` and `Xd`: that keeps the layer's state,
+    /// and what a mesh before it had (`mesh_undo`).
+    fn state_block_continues(&mut self, w: &str) {
+        if matches!(w, "Xy" | "Xd" | "XW" | "BB" | "LB") {
+            return;
+        }
+        self.after_object = false;
+        if !matches!(w, "J" | "j" | "w" | "M" | "d" | "XR") {
+            self.layer_state = None;
+            self.mesh_undo = None;
+        }
+    }
+
     /// `mode opacity isolate knockout shape Xy`; after a group's end, the group's too, and right
     /// after a gradient mesh's `/End X!` (before its `Xd` and `6 () XW`), the mesh's, unless the
     /// layer's `LB` follows: then it is the layer's (see `end_layer`).
@@ -443,6 +453,10 @@ impl<'a> Reader<'a> {
         let code = Self::nums(vals).last().copied().unwrap_or(0.0);
         let style = vals.iter().rev().find_map(V::text).unwrap_or_default();
         let after = std::mem::take(&mut self.after_object);
+        // An object's own state block ends `6 () XW` (a layer's `7 () XW`): an `Xy` before it isn't the layer's.
+        if code == 6.0 {
+            self.layer_state = None;
+        }
         if code == 9.0
             && let Some(look) = self
                 .frames
