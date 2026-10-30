@@ -24,6 +24,22 @@ use typing::is_shortcut_chord;
 pub(crate) use typing::keep_marked_text;
 use typing::{drop_typing_presses, type_text};
 
+fn text_focus_frame_id() -> egui::Id {
+    egui::Id::unique("shortcut-text-focus-frame")
+}
+
+pub(crate) fn remember_text_focus(ctx: &egui::Context) {
+    if ctx.egui_wants_keyboard_input() {
+        let frame = ctx.cumulative_frame_nr_for(ctx.viewport_id());
+        ctx.data_mut(|d| d.insert_temp(text_focus_frame_id(), frame));
+    }
+}
+
+fn text_focused_in_previous_frame(ctx: &egui::Context) -> bool {
+    let previous = ctx.cumulative_frame_nr_for(ctx.viewport_id()).checked_sub(1);
+    ctx.data(|d| d.get_temp::<u64>(text_focus_frame_id())) == previous
+}
+
 /// Parse "Cmd+Shift+]" into an egui shortcut. `Cmd` is Command on macOS and Ctrl elsewhere.
 /// `+` and `=` name one chord key ([`Key::Equals`]): `+` is Shift+`=` on many layouts, so a
 /// `Cmd+=` chord also answers `+` however it is typed.
@@ -247,6 +263,9 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
                     escape_pair = None;
                 } else if matches!(app.ui.screen_mode, 1 | 2)
                     && !egui::Popup::is_any_open(ctx)
+                    && !text_focused_in_previous_frame(ctx)
+                    && !crate::canvas::ruler_origin_dragging(ctx)
+                    && !crate::tools_float::escape_cancelled_move(ctx)
                     && ctx.input(|i| {
                         i.events.iter().any(|e| {
                             matches!(e, egui::Event::Key { key: Key::Escape, pressed: true, repeat: false, modifiers, .. } if *modifiers == Modifiers::NONE)

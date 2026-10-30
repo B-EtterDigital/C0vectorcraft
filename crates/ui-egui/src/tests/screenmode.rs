@@ -150,6 +150,57 @@ fn a_tool_drag_takes_escape_before_full_screen_exits() {
 }
 
 #[test]
+fn a_ruler_origin_drag_takes_escape_before_full_screen_exits() {
+    for mode in [1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        app.ui.view.rulers = true;
+        frame(&mut app, &ctx, vec![]);
+        let corner = ctx.read_response(egui::Id::unique("ruler-corner")).expect("the rulers' corner").rect.center();
+        let to = app.canvas_rect.unwrap().center();
+        let button = |pos, pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
+        frame(&mut app, &ctx, vec![egui::Event::PointerMoved(corner)]);
+        frame(&mut app, &ctx, vec![button(corner, true)]);
+        frame(&mut app, &ctx, vec![egui::Event::PointerMoved(to)]);
+        assert!(crate::canvas::ruler_origin_dragging(&ctx), "mode {mode}");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, mode, "Escape cancels the drag in mode {mode}");
+        frame(&mut app, &ctx, vec![button(to, false)]);
+        assert!(!crate::canvas::ruler_origin_dragging(&ctx), "mode {mode}");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "Escape after the drag in mode {mode}");
+    }
+}
+
+#[test]
+fn a_floating_tools_move_takes_escape_before_full_screen_exits() {
+    for mode in [1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        app.run("window.panel.float", json!({"panel": "tools", "x": 120, "y": 140})).unwrap();
+        frame(&mut app, &ctx, vec![]);
+        frame(&mut app, &ctx, vec![]);
+        let original = app.ui.toolbar_pos;
+        let [x, y] = original.expect("the Tools panel floats");
+        let area = ctx.memory(|m| m.area_rect(egui::Id::unique("toolbar-floating"))).expect("the floating Tools area");
+        let title = area.min + egui::vec2(20.0, 17.0);
+        let to = title + egui::vec2(100.0, 80.0);
+        let button = |pos, pressed| egui::Event::PointerButton { pos, button: egui::PointerButton::Primary, pressed, modifiers: Default::default() };
+        frame(&mut app, &ctx, vec![egui::Event::PointerMoved(title), button(title, true)]);
+        for step in 1..=6 {
+            frame(&mut app, &ctx, vec![egui::Event::PointerMoved(title + (to - title) * (step as f32 / 6.0))]);
+        }
+        assert_ne!(app.ui.toolbar_pos, original, "the Tools panel moved in mode {mode}: saved {x} {y}, area {area:?}");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, mode, "Escape cancels the Tools move in mode {mode}");
+        assert_eq!(app.ui.toolbar_pos, original, "Escape restores the Tools panel's position");
+        frame(&mut app, &ctx, vec![button(to, false)]);
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "Escape after the move in mode {mode}");
+    }
+}
+
+#[test]
 fn a_popup_takes_escape_before_full_screen_exits() {
     let ctx = egui::Context::default();
     let mut app = in_screen_mode(&ctx, 2);
@@ -177,6 +228,119 @@ fn a_rotated_view_resets_before_full_screen_exits() {
     assert_eq!(app.ui.screen_mode, 2);
     frame(&mut app, &ctx, escape());
     assert_eq!(app.ui.screen_mode, 0);
+}
+
+#[test]
+fn a_dialog_takes_escape_before_full_screen_exits() {
+    for mode in [1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        app.ui.dialog = Some(crate::state::Dialog::new("rectangle", json!({"width": 20, "height": 20})));
+        frame(&mut app, &ctx, vec![]);
+        frame(&mut app, &ctx, escape());
+        assert!(app.ui.dialog.is_none(), "mode {mode}");
+        assert_eq!(app.ui.screen_mode, mode, "mode {mode}");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "after the dialog in mode {mode}");
+    }
+}
+
+#[test]
+fn a_focused_field_keeps_full_screen_mode() {
+    for mode in [1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        let id = egui::Id::unique("screen-mode-field");
+        let mut value = String::new();
+        let mut field_frame = |app: &mut VectorcraftApp, events, focus| {
+            let raw = egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0))),
+                events,
+                ..Default::default()
+            };
+            let mut out = ctx.run_ui(raw, |ui| {
+                app.logic(ui.ctx());
+                let response = ui.add(egui::TextEdit::singleline(&mut value).id(id));
+                if focus {
+                    response.request_focus();
+                }
+                app.ui(ui);
+            });
+            out.textures_delta.clear();
+        };
+        field_frame(&mut app, vec![], true);
+        assert!(ctx.egui_wants_keyboard_input());
+        field_frame(&mut app, escape(), false);
+        assert_eq!(app.ui.screen_mode, mode, "focused field in mode {mode}");
+    }
+}
+
+#[test]
+fn a_claimed_tool_key_keeps_full_screen_mode() {
+    for mode in [1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        app.select_tool("intertwine");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, mode, "Intertwine claims Escape in mode {mode}");
+        app.select_tool("selection");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "after changing tools in mode {mode}");
+    }
+}
+
+#[test]
+fn pattern_edit_and_global_edit_take_escape_before_full_screen() {
+    for mode in [1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        app.run("object.pattern.make", json!({"name": "Dots", "width": 20, "height": 20})).unwrap();
+        assert!(app.session.active().unwrap().doc.pattern_edit.is_some());
+        frame(&mut app, &ctx, escape());
+        assert!(app.session.active().unwrap().doc.pattern_edit.is_none());
+        assert_eq!(app.ui.screen_mode, mode, "pattern edit in mode {mode}");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "after pattern edit in mode {mode}");
+
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        app.run("shape.rectangle", json!({"x": 130, "y": 40, "width": 20, "height": 20})).unwrap();
+        app.run("select.globalEdit", json!({})).unwrap();
+        assert!(app.session.active().unwrap().global_edit.is_some());
+        frame(&mut app, &ctx, escape());
+        assert!(app.session.active().unwrap().global_edit.is_none());
+        assert_eq!(app.ui.screen_mode, mode, "Global Edit in mode {mode}");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "after Global Edit in mode {mode}");
+    }
+}
+
+#[test]
+fn a_tool_flyout_takes_escape_before_full_screen() {
+    for mode in [1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        app.ui.flyout = Some(0);
+        frame(&mut app, &ctx, escape());
+        assert!(app.ui.flyout.is_none());
+        assert_eq!(app.ui.screen_mode, mode, "flyout in mode {mode}");
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "after flyout in mode {mode}");
+    }
+}
+
+#[test]
+fn a_rotation_pair_exits_full_screen_then_resets_with_selection_tool() {
+    for mode in [1, 2] {
+        let ctx = egui::Context::default();
+        let mut app = in_screen_mode(&ctx, mode);
+        app.run("view.rotate", json!({"angle": 30})).unwrap();
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.ui.screen_mode, 0, "first Escape in mode {mode}");
+        assert_eq!(app.view().unwrap().rotation, 30.0);
+        frame(&mut app, &ctx, escape());
+        assert_eq!(app.view().unwrap().rotation, 0.0, "second Escape after mode {mode}");
+    }
 }
 
 #[test]
