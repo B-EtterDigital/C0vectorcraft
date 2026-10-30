@@ -1,6 +1,6 @@
 # Parity with Adobe Illustrator
 
-> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-31 · **Change:** minor (Artwork Cleanup add-on: text tools; scores unchanged) · **Target:** Adobe Illustrator 2026 (30.x; public release notes through 30.7, August 2026)
+> **Last reviewed:** 2026-10-10 · **Last updated:** 2026-10-31 · **Change:** minor (Path Precision Tools add-on: Corner Tool and Slide Anchor Along Path; scores unchanged) · **Target:** Adobe Illustrator 2026 (30.x; public release notes through 30.7, August 2026)
 
 ## Feature submission evidence
 
@@ -1263,6 +1263,19 @@ stored data), `cmd::addons::pathtools::tests` in `vectorcraft-engine` (each comm
 anchor edits and transforms, the SVG export filter, the tool's gestures), `addons::pathtools::tests` in
 `vectorcraft-ui-egui` (submenu and panel) and `command_sweep`.
 
+The add-on's Corner Tool (2026-10-31) edits the Live Corners every path already keeps (no second corner store): hover
+shows an anchor that can take a corner, a click cuts one with the tool's radius and kind (round, inverted, chamfer), a
+drag sizes it (Shift: whole values), a cut corner's marker selects it and loads its values, resizes it, and removes it
+at 0 or on a double-click, a corner never grows past what fits, and an Alt-marquee cuts every eligible anchor inside. A
+Corners section in the Anchor Inspector sets the radius and kind, counts the selected corners and applies to them.
+Slide Anchor Along Path drags an anchor along its curve, the two segments beside it refitted by the keep-shape kernel
+(Shift: where the tangent is a multiple of 45°). Commands `addon.pathtools.cornerSet`, `cornerRemove` and `slideAnchor`,
+each one undo step; `vectorcraft_pathops::addons::pathtools::slide_anchor`. Tests: `addons::pathtools` in
+`vectorcraft-pathops` (the outline stays within 0.05 pt on a circle, straight runs, ends, stops), `addons::corner_tool`
+and `addons::slide_anchor` in `vectorcraft-tools`, `cmd::addons::pathtools::tests` in `vectorcraft-engine` (each command
+one undo step, bad params refused, the tools' gestures), `addons::pathtools::tests` in `vectorcraft-ui-egui` (submenu,
+panel section), `edit_toolbar::tests` and `command_sweep`.
+
 ## Smart Pen add-on (2026-10-30)
 
 A VectorCraft addition, not an Illustrator feature, so no area score moves. Object › Plug-ins › Smart Pen selects the
@@ -1311,6 +1324,7 @@ add-on.
 
 | Date | Change | Summary |
 |---|---|---|
+| 2026-10-31 | minor | Path Precision Tools add-on: the Corner Tool and Slide Anchor Along Path; evidence added; scores unchanged. |
 | 2026-10-30 | minor | File formats: `.ai`/EPS editing-data fidelity from an audit of a user's files: All Caps and Small Caps (#4708); placed files at their box's corner, kept where they draw closer to the page (#4664, #4723, #4742); pages cropped to the art, with `UserUnit` (#4658, #4727); gradient mesh corners with handle weights of 0 and the state written after a mesh (#4738, #4744, #4748); type on a path spaced as the file lays it out (#4743); synthetic regressions in `crates/eps`; evidence added; scores unchanged. |
 | 2026-10-31 | minor | Artwork Cleanup add-on (a VectorCraft addition): text tools; evidence added; scores unchanged. |
 | 2026-10-30 | minor | Color Effects add-on: live Duotone (one to four inks, spot tones kept) and Print Ink Fixes; scores and estimates unchanged |
