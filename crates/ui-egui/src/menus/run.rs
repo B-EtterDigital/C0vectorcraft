@@ -40,8 +40,8 @@ pub fn check_params(session: &vectorcraft_engine::Session, id: &str, params: &Va
 /// handles its own way (a Window menu panel item that toggles, …) → `None` to leave it to the
 /// engine.
 pub fn run_ui_command(app: &mut VectorcraftApp, id: &str, p: &Value) -> Option<Result<Value, String>> {
-    // The Window menu's panel items toggle like its other checked items (#2361); the panel's
-    // other ways in (shortcuts, Show Properties Panel, a tool's double-click) only show it.
+    // Window menu items and the named panel function keys toggle against the checked state;
+    // other commands that open panels show them.
     if id == "window.panel" && p.get("toggle").and_then(Value::as_bool) == Some(true) && checked(app, id, p) == Some(true) {
         let panel = p.get("panel").and_then(Value::as_str).and_then(normalize_panel).unwrap_or_default();
         if app.ui.open_panel.as_deref() == Some(panel) {

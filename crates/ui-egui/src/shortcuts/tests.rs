@@ -1,5 +1,29 @@
 use super::*;
 
+#[test]
+fn rebound_layers_chord_toggles_and_plain_panel_command_reveals() {
+    let mut overrides = craft_keymap::Overrides::new();
+    crate::keymap::set_override(&mut overrides, "panel:layers", "Cmd+Alt+Shift+F7");
+    let keymap = crate::keymap::keymap_with(&overrides);
+    let old = crate::keymap::vc_chord("F7").unwrap();
+    assert!(crate::keymap::lookup(&keymap, &old).is_none(), "the old F7 is free");
+    let rebound = crate::keymap::vc_chord("Cmd+Alt+Shift+F7").unwrap();
+    let hit = crate::keymap::lookup(&keymap, &rebound).unwrap();
+    assert_eq!(hit.id, "window.panel");
+    assert_eq!(hit.params["panel"], "layers");
+
+    let mut app = VectorcraftApp::new(vectorcraft_engine::Session::new(), Default::default());
+    app.run("file.new", json!({"width": 400, "height": 300})).unwrap();
+    app.run("window.panel", json!({"panel": "layers"})).unwrap();
+    let ctx = egui::Context::default();
+    run_hit(&mut app, &ctx, &hit);
+    assert_eq!(crate::menus::checked(&app, "window.panel", &json!({"panel": "layers"})), Some(false));
+    run_hit(&mut app, &ctx, &hit);
+    assert_eq!(crate::menus::checked(&app, "window.panel", &json!({"panel": "layers"})), Some(true));
+    app.run("window.panel", json!({"panel": "layers"})).unwrap();
+    assert_eq!(crate::menus::checked(&app, "window.panel", &json!({"panel": "layers"})), Some(true), "a plain command still reveals");
+}
+
 /// One headless frame delivering `events` to the shortcut handler.
 fn frame(app: &mut VectorcraftApp, events: Vec<egui::Event>) -> egui::FullOutput {
     let ctx = egui::Context::default();
