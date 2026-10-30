@@ -361,19 +361,28 @@ fn single_key_shortcuts(app: &mut VectorcraftApp, ctx: &egui::Context) {
 /// Route Alt+arrows to spacing controls when text objects are selected.
 fn alt_type_arrows(app: &mut VectorcraftApp, ctx: &egui::Context) -> bool {
     let m = ctx.input(|i| i.modifiers);
-    if !m.alt
-        || !app.session.active().is_some_and(|st| {
-            st.selection.guides.is_empty()
-                && !st.selection.objects.is_empty()
-                && st.selection.objects.iter().all(|id| matches!(st.doc.node(*id).map(|n| &n.kind), Some(vectorcraft_doc::NodeKind::Text(_))))
-        })
-    {
+    if !m.alt {
         return false;
     }
+    let orientation = app.session.active().and_then(|st| {
+        if !st.selection.guides.is_empty() || st.selection.objects.is_empty() {
+            return None;
+        }
+        let mut all_vertical = true;
+        for id in &st.selection.objects {
+            let node = st.doc.node(*id)?;
+            let vectorcraft_doc::NodeKind::Text(t) = &node.kind else { return None };
+            all_vertical &= t.vertical;
+        }
+        Some(all_vertical)
+    });
+    let Some(vertical) = orientation else {
+        return false;
+    };
     let keys = [(Key::ArrowLeft, ToolKey::Left), (Key::ArrowRight, ToolKey::Right), (Key::ArrowUp, ToolKey::Up), (Key::ArrowDown, ToolKey::Down)];
     for (key, tool_key) in keys {
         if ctx.input_mut(|i| i.consume_key(m, key)) {
-            if let Some((attribute, by)) = vectorcraft_tools::text::step_key(tool_key, m.shift, false) {
+            if let Some((attribute, by)) = vectorcraft_tools::text::step_key(tool_key, m.shift, false, vertical) {
                 let by = if m.command { by * 5.0 } else { by };
                 let _ = app.run("type.step", json!({"attribute": attribute, "by": by}));
             }

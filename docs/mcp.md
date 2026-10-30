@@ -3173,8 +3173,10 @@ Pen's second anchor at (150, 431), in line with the square's centre.
   Cmd+Shift+,) step the size. `type.size.increaseByFive` (Cmd+Alt+Shift+., `press_key {key: ".", mods: {cmd: true,
   alt: true, shift: true}}`) and `type.size.decreaseByFive` (Cmd+Alt+Shift+,) step it by five times `typeSizeIncrement`.
   The Type tool's Alt+arrows (`press_key {key: "Right", mods: {alt: true}}`) step kerning at
-  a caret or tracking of the selection (←/→), leading (↑/↓) and baseline shift (Shift+↑/↓), five steps with Cmd/Ctrl
-  too. `type.resetTracking` (Cmd+Alt+Q, `press_key {key: "Q", mods: {cmd: true, alt: true}}`) sets tracking to 0 and
+  a caret or tracking of the selection (←/→ in horizontal type, ↓/↑ with or without Shift in vertical type),
+  leading (↑/↓ in horizontal type, ←/→ in vertical type), and baseline shift (Shift+↑/↓ in horizontal type,
+  Shift+→/← in vertical type). Mixed selected text objects use the horizontal mapping; Cmd/Ctrl makes five steps.
+  `type.resetTracking` (Cmd+Alt+Q, `press_key {key: "Q", mods: {cmd: true, alt: true}}`) sets tracking to 0 and
   kerning to Auto in the type objects in `ids`, the Type tool's selected text or the selected type objects; at a caret
   it resets only the kerning of the character before it. `type.resetHorizontalScale` (Cmd+Shift+X,
   `press_key {key: "X", mods: {cmd: true, shift: true}}`) sets the horizontal scale to 100%, as the Character panel
