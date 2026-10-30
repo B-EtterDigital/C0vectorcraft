@@ -788,6 +788,22 @@ fn panel_menu_repeats_deletes_and_clears_tab_stops() {
     assert_eq!(positions(&app).len(), 21);
 }
 
+#[test]
+fn panel_menu_does_not_change_stops_while_an_indent_marker_is_selected() {
+    let mut app = indent_app(24.0, 12.0);
+    app.session.execute("text.tabs.set", &json!({"stops": [{"position": 50}, {"position": 70}]})).unwrap();
+    let ctx = egui::Context::default();
+    set_pstate(&ctx, "tabs-sel", 1usize);
+    marker_event(&ctx, &mut app, 36.0, 36.0, true, false, false);
+    assert_eq!(pstate::<Option<IndentMarker>>(&ctx, "tabs-marker-sel"), Some(IndentMarker::Upper));
+    let before = current(&app).unwrap().1;
+
+    choose(&ctx, &mut app, "Repeat Tab");
+    assert_eq!(current(&app).unwrap().1, before);
+    choose(&ctx, &mut app, "Delete Tab");
+    assert_eq!(current(&app).unwrap().1, before);
+}
+
 /// Repeat Tab on the first stop spaces the copies by the stop's distance from the paragraph's
 /// left indent, from the paragraph the caret is in while the Type tool edits text.
 #[test]

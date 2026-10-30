@@ -533,6 +533,7 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
         return;
     };
     let mut stops = para.tabs;
+    let selected_marker: Option<IndentMarker> = pstate(ui.ctx(), "tabs-marker-sel");
     // Clamp the selection to the last stop, as `show` does for the ruler.
     let mut sel: usize = pstate(ui.ctx(), "tabs-sel");
     if sel >= stops.len() {
@@ -543,13 +544,13 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
     {
         app.status(e);
     }
-    if menu_item(ui, tl!("Delete Tab"), sel < stops.len(), false) {
+    if menu_item(ui, tl!("Delete Tab"), sel < stops.len() && selected_marker.is_none(), false) {
         stops.remove(sel);
         apply(app, &stops);
     }
     // Repeat Tab: copies of the selected stop across the ruler, spaced by its distance from the
     // previous stop, or from the paragraph's left indent when it is the first stop.
-    if menu_item(ui, tl!("Repeat Tab"), sel < stops.len(), false) {
+    if menu_item(ui, tl!("Repeat Tab"), sel < stops.len() && selected_marker.is_none(), false) {
         let step = match sel {
             0 => (stops[0].position - para.left_indent).abs(),
             _ => stops[sel].position - stops[sel - 1].position,
