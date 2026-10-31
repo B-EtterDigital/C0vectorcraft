@@ -113,7 +113,7 @@ Checked 2026-10-10 from the code, tests and open issues; no workflow fails, so V
 Milestone estimates predate the 2026-10-10 re-measure for M1–M14; the area table in
 [target-app-parity.md](target-app-parity.md) is authoritative when they disagree.
 
-## Progress log before the progress-docs standard
+## Earlier progress log
 
 The ROADMAP's "last updated" line as of 2026-10-10, kept as the record of what landed up to then:
 

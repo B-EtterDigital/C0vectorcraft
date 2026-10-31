@@ -196,7 +196,7 @@ Ranked; detail in [docs/roadmap.md](docs/roadmap.md) and [docs/gaps.md](docs/gap
 | 2026-10-01 | Renamed from DrawCraft to VectorCraft |
 | 2026-09-30 | Repository history begins |
 
-The full pre-standard record of what landed is kept in [docs/roadmap.md](docs/roadmap.md#progress-log-before-the-progress-docs-standard).
+The full earlier record of what landed is kept in [docs/roadmap.md](docs/roadmap.md#earlier-progress-log).
 
 ## Revision history
 
@@ -223,7 +223,7 @@ The full pre-standard record of what landed is kept in [docs/roadmap.md](docs/ro
 | 2026-10-13 | minor | Bounded synthetic control input (#1709): counts and queued events validated before mutation; control-channel bursts yield between frames. Scores and hours unchanged. |
 | 2026-10-14 | minor | Progress log row for the merges of 2026-10-14 (#1641–#1808 as listed there) and Image Trace's #1647 and #1657; the 2026-10-13 row now says that a guide's position in the Transform panel (#1659) is not established by the documentation found and is kept as a convenience pending the owner's decision; headline numbers unchanged. |
 | 2026-10-13 | minor | Control transport deadlines (#1726): idle and partial clients and blocked replies release connection slots; parity scores and estimates unchanged. |
-| 2026-10-10 | minor | Method aligned with the standard, no new evidence: full ready for real work is the additive weighted sum, ~62%; hours per audience; beta ~13 points away |
+| 2026-10-10 | minor | Method changed, no new evidence: full ready for real work is the additive weighted sum, ~62%; hours per audience; beta ~13 points away |
 | 2026-10-10 | minor | Added the essentials-user readiness score (~75%) |
 | 2026-10-10 | minor | Ready for real work re-examined against the issue tracker and user feedback: 50% → 55% (full), 65% mainstream added; see target-app-parity.md |
 | 2026-10-10 | minor | Applied the core-workflow gate (docs/roadmap.md › Alpha gate): passes, stage stays alpha |
