@@ -35,29 +35,30 @@ pub use chips::{ProxyClicks, chip_button, chip_button_named, fill_stroke_proxy, 
 pub(crate) use color::pointer_phase;
 pub use color::{
     Live, SliderValue, WheelResponse, channel_slider, channel_slider_named, channel_slider_valued, color_field, color_mesh, color_slider,
-    color_slider_named, color_slider_stepped, color_slider_valued, harmony_wheel, hex_field, hex_field_named, region_texture,
+    color_slider_named, color_slider_stepped, color_slider_valued, harmony_wheel, hex_field, hex_field_named, region_texture, stepped_area,
 };
 pub use drag::{PanelDrag, SwatchRows, art_drop, doc_preview, drag_source};
 #[cfg(test)]
 use dropdowns::combo_button_id;
-pub(crate) use dropdowns::{combo, combo_menu};
+pub(crate) use dropdowns::{combo, combo_menu, combo_named};
 pub use dropdowns::{
     dropdown, dropdown_named, dropdown_names, dropdown_names_named, dropdown_with, dropdown_with_named, list_scroll_style, menu_room, menu_scroll,
     panel_scroll, popover, set_menu_floor, strip_scroll,
 };
 pub use labels::{dim_label, dim_name, divider, field_label, label_row, link_label, section_header, section_toggle, section_toggle_name, subheader};
 pub(crate) use labels::{label_field, take_previous_label};
+pub(crate) use numeric::{ANY, round_to, set_bare_numbers_are_points, typed_unit};
 pub use numeric::{
-    SpinPick, mixed_field, mixed_field_named, num_field, num_field_named, opt_field, opt_field_named, range_field, range_field_named,
-    range_field_stepped, size_field, size_field_named, slider, spin_field, spin_field_auto, spin_field_auto_named, spin_field_named,
-    spin_field_stops_named, spin_plain, spin_plain_named,
+    SpinPick, mixed_field, mixed_field_named, num_field, num_field_named, num_field_within, opt_field, opt_field_named, range_field,
+    range_field_named, range_field_stepped, size_field, size_field_named, slider, spin_field, spin_field_auto, spin_field_auto_named,
+    spin_field_named, spin_field_stops_named, spin_kerning, spin_plain, spin_plain_named,
 };
 #[cfg(test)]
 use numeric::{decimal_point, share_of, spinner_step, step_through, step_to_multiple, within_a_millionth};
-pub(crate) use numeric::{round_to, set_bare_numbers_are_points, typed_unit};
 pub use panel_chrome::{bottom_bar, layout_button, list_box, orientation_button, tab_bar};
 pub(crate) use text::{
-    arm_field_focus, dialog_focus_flag, disarm_field_focus, enter_modifiers, focus_field, own_field_shift_enter, set_dialog_open, take_dialog_focus,
+    arm_field_focus, dialog_focus_flag, dialog_reject_commit_flag, disarm_field_focus, enter_modifiers, focus_field, own_field_shift_enter,
+    reject_dialog_commit, set_dialog_open, take_dialog_focus,
 };
 pub use text::{
     exact_text_field, exact_text_field_named, plain_field, plain_field_named, search_field, text_field, text_field_named, text_presets,
@@ -87,7 +88,7 @@ impl<T> std::fmt::Debug for HashOnly<T> {
 }
 
 /// `parent.with(salt)` for a salt that needs only `Hash`.
-fn id_with(parent: egui::Id, salt: impl std::hash::Hash) -> egui::Id {
+pub(crate) fn id_with(parent: egui::Id, salt: impl std::hash::Hash) -> egui::Id {
     parent.with(HashOnly(salt))
 }
 
@@ -114,6 +115,19 @@ pub(crate) mod accessibility_tests {
             nodes = out.platform_output.accesskit_update.map(|u| u.nodes.into_iter().map(|(_, n)| n).collect()).unwrap_or_default();
         }
         nodes
+    }
+
+    /// The widgets that `tabs` presses of Tab give the keyboard focus to, in order. `frame` runs
+    /// one frame of `ctx` with the events it is given.
+    pub(crate) fn tab_stops(ctx: &egui::Context, tabs: usize, mut frame: impl FnMut(Vec<egui::Event>)) -> Vec<egui::Id> {
+        let tab = egui::Event::Key { key: egui::Key::Tab, physical_key: None, pressed: true, repeat: false, modifiers: egui::Modifiers::NONE };
+        let mut stops = vec![];
+        for _ in 0..tabs {
+            frame(vec![tab.clone()]);
+            frame(vec![]);
+            stops.extend(ctx.memory(|m| m.focused()));
+        }
+        stops
     }
 
     /// The node of `tree` that screen readers name `label`.

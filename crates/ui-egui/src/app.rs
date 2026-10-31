@@ -31,6 +31,16 @@ mod view;
 pub use fonts::MAX_RECENT_FONTS;
 
 impl VectorcraftApp {
+    /// Takes the host's Caps Lock state, which gives the drawing tools the crosshair while it is on
+    /// without changing the saved Use Precise Cursors preference.
+    pub fn set_caps_lock(&mut self, on: bool) {
+        if self.session.caps_lock != on
+            && let Err(err) = self.run("view.capsLock", json!({ "on": on }))
+        {
+            log::error!("Could not update Caps Lock cursor state: {err}");
+        }
+    }
+
     /// The app around `session`, reaching the platform through `services` (file pickers, the
     /// clipboard, files and the like). It starts cataloguing the installed fonts at once, gives
     /// Data Recovery the host's store and makes a view for each open document.
@@ -74,11 +84,13 @@ impl VectorcraftApp {
                 cursors: Default::default(),
                 view_moved: None,
                 hover_cursor: None,
+                presented: None,
             },
             perf: Perf::default(),
             dock_rt: Default::default(),
             titlebar_inset: 0.0,
             last_effect: None,
+            last_pathfinder: None,
             last_warp: None,
             character_focus: None,
             run_count: 0,
@@ -104,6 +116,7 @@ impl VectorcraftApp {
             hover_doc: None,
             custom_titlebar: false,
             last_window_title: String::new(),
+            fullscreen_for_mode: false,
             graphics_adapter: None,
             place: Default::default(),
             system_paste: false,
@@ -338,6 +351,7 @@ impl VectorcraftApp {
         // The OS title bar (and the taskbar / Alt-Tab entry) follows the active file; with the
         // system title bar this is where the document name lives, as the in-app mark is hidden.
         crate::chrome::sync_window_title(self, ctx);
+        crate::chrome::sync_fullscreen(self, ctx);
         self.drain_control(ctx);
         crate::c0_host::tick(self);
         // An egui `PasteImage` with a rich system clipboard: run the paste command now, once. It
@@ -398,7 +412,8 @@ impl VectorcraftApp {
         crate::ime::install_hooks(ctx);
         self.adopt_context(ctx);
         if !self.styled {
-            theme::apply(ctx, self.ui.brightness);
+            // The saved accent, color scheme and canvas color, not the defaults (#4837).
+            prefs_dialog::reapply(self, ctx);
             egui_extras::install_image_loaders(ctx);
             self.styled = true;
         }
@@ -500,6 +515,9 @@ impl VectorcraftApp {
             titlebar::resize_zones(ui);
         }
         self.ui_fonts.frame(&ctx);
+        if self.ui.dialog.is_none() && !self.ui.palette_open {
+            shortcuts::remember_text_focus(&ctx);
+        }
         scrub::end_frame(self, &ctx);
         native_menu::sync(self, &ctx);
         // Observe once, after all of this pass's input, dialogs, floating panels, palette and
