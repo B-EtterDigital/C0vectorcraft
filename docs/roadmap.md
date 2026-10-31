@@ -44,7 +44,7 @@ public menu documentation would be allowed).
 
 ## Alpha gate
 
-The core-workflow gate from craftrules' progress-docs standard: what a typical professional does with
+The core-workflow gate: what a typical professional does with
 Illustrator every day, checked end to end on the main platform (macOS) with save and reopen in the native
 `.vectorcraft` format (lossless, property-tested round trips in `crates/format/tests/prop_format.rs`).
 Checked 2026-10-10 from the code, tests and open issues; no workflow fails, so VectorCraft passes and stays alpha.
