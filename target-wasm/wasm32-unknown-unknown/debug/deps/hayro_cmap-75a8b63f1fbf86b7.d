@@ -1,0 +1,11 @@
+/srv/smoac/build/vec-fix-20261103/target-wasm/wasm32-unknown-unknown/debug/deps/hayro_cmap-75a8b63f1fbf86b7.d: /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/lib.rs /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/mod.rs /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/embedded.rs /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/huffman.rs /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/reader.rs /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/parse.rs /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/../../assets/cmaps.brotli
+
+/srv/smoac/build/vec-fix-20261103/target-wasm/wasm32-unknown-unknown/debug/deps/libhayro_cmap-75a8b63f1fbf86b7.rmeta: /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/lib.rs /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/mod.rs /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/embedded.rs /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/huffman.rs /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/reader.rs /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/parse.rs /root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/../../assets/cmaps.brotli
+
+/root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/lib.rs:
+/root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/mod.rs:
+/root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/embedded.rs:
+/root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/huffman.rs:
+/root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/reader.rs:
+/root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/parse.rs:
+/root/.cargo/git/checkouts/craft-libs-d830b991a08c6c3d/92d392c/vendor/hayro-cmap/src/bcmap/../../assets/cmaps.brotli:

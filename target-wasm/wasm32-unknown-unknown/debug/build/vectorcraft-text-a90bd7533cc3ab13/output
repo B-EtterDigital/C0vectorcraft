@@ -1,0 +1,4 @@
+cargo::rerun-if-env-changed=CRAFT_FONTS_DIR
+cargo::rerun-if-env-changed=CRAFT_FONTS_REQUIRED
+cargo::rerun-if-changed=web-fonts.txt
+cargo::rerun-if-changed=build/web_fonts.rs

@@ -1,0 +1,10 @@
+/srv/smoac/build/vec-fix-20261103/target-wasm/wasm32-unknown-unknown/debug/deps/alloc_no_stdlib-d3c44255bb3cc353.d: /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/lib.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/allocated_memory/mod.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/allocated_memory/index_macro.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/stack_allocator.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/allocated_stack_memory.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/init.rs
+
+/srv/smoac/build/vec-fix-20261103/target-wasm/wasm32-unknown-unknown/debug/deps/liballoc_no_stdlib-d3c44255bb3cc353.rmeta: /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/lib.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/allocated_memory/mod.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/allocated_memory/index_macro.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/stack_allocator.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/allocated_stack_memory.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/init.rs
+
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/lib.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/allocated_memory/mod.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/allocated_memory/index_macro.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/stack_allocator.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/allocated_stack_memory.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/alloc-no-stdlib-2.0.4/src/init.rs:
