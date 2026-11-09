@@ -82,6 +82,7 @@ mod select;
 pub(crate) mod shaper;
 pub mod shortcutset;
 pub(crate) mod slices;
+pub mod spelling;
 mod stroke;
 mod style;
 pub mod stylelib;
@@ -321,6 +322,7 @@ pub fn command_specs() -> &'static [CommandSpec] {
         v.extend(expand::specs());
         v.extend(attributes::specs());
         v.extend(interactivity::specs());
+        v.extend(spelling::specs());
         v.extend(svgfilter::specs());
         v.extend(newart::specs());
         v.extend(colortheme::specs());
@@ -356,8 +358,16 @@ pub fn command_specs() -> &'static [CommandSpec] {
     })
 }
 
+/// The command `id`: a built-in one, or a command an installed plug-in adds
+/// ([`plugin::command_specs`]).
 pub fn find_command(id: &str) -> Option<&'static CommandSpec> {
-    command_specs().iter().find(|c| c.id == id)
+    command_specs().iter().find(|c| c.id == id).or_else(|| plugin::find_spec(id))
+}
+
+/// Runs command `spec`'s implementation with `p`. A plug-in command's runs the plug-in
+/// ([`plugin::run_command`]), which needs the command's id.
+pub(crate) fn run_spec(s: &mut Session, spec: &CommandSpec, p: &Value) -> Result<Value> {
+    if plugin::is_command_id(spec.id) { plugin::run_command(s, spec.id, p) } else { (spec.run)(s, p) }
 }
 
 // ---------- param helpers ----------

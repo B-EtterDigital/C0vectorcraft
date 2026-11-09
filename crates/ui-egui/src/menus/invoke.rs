@@ -138,6 +138,11 @@ pub fn invoke(app: &mut VectorcraftApp, id: &str, p: Value) {
     if waits_for_ime(app, id) {
         return;
     }
+    // A command chosen while the tool computes an edit on another thread (a Shape Builder merge)
+    // comes after it: the edit is applied first, so the command's dialog, or the app's own dialog
+    // (Recolor Artwork), opens on the art as the gesture left it.
+    let r = app.session.finish_tool_edit();
+    crate::canvas::apply_requests(app, r);
     // A shortcut or a palette pick on a filter plug-in does nothing while its menu item is dimmed.
     if id == "plugin.dialog" && !enabled(app, id) {
         return;
@@ -154,6 +159,10 @@ pub fn invoke(app: &mut VectorcraftApp, id: &str, p: Value) {
         && let Some((kind, fields)) = menu_dialog(app, id)
     {
         app.ui.dialog = Some(crate::state::Dialog::new(kind, fields));
+        return;
+    }
+    // A plug-in command with parameters asks for them, from its menu item or its shortcut.
+    if p.as_object().is_none_or(|o| o.is_empty()) && crate::dialogs::plugin::open_command(app, id) {
         return;
     }
     if open_view_dialog(app, id, &p) || open_object_dialog(app, id, &p) {

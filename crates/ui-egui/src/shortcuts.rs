@@ -99,7 +99,7 @@ pub(crate) fn is_modifier(key: Key) -> bool {
 /// command's params: `{}`, or `{panel}` for the panel shortcuts (`window.panel`).
 pub(crate) fn all_shortcuts() -> Vec<(KeyboardShortcut, &'static str, serde_json::Value)> {
     let mut v = vec![];
-    for c in vectorcraft_engine::command_specs() {
+    for c in vectorcraft_engine::command_specs().iter().chain(vectorcraft_engine::cmd::plugin::command_specs()) {
         if let Some(sc) = crate::menus::shortcut_of(c.id).and_then(parse) {
             v.push((sc, c.id, json!({})));
         }
@@ -207,6 +207,11 @@ pub fn handle(app: &mut VectorcraftApp, ctx: &egui::Context) {
     let textless_paste = ctx.input(|i| app.paste_chord.textless_paste(&i.events));
     // A numeric field being scrubbed has the keyboard: Escape cancels the drag.
     if crate::scrub::phase(ctx) != crate::scrub::Phase::Idle {
+        crate::ime::controls_without_editor(app, ctx);
+        return;
+    }
+    // The update prompt and the modal result window draw over everything and read Escape themselves.
+    if crate::updates_ui::blocks_input(app) {
         crate::ime::controls_without_editor(app, ctx);
         return;
     }

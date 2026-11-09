@@ -1,6 +1,6 @@
 use super::{
     CommandSpec, EngineError, JOURNALED_READS, NodeId, Result, SELECTS_GIVEN_IDS, Selection, Session, Value, cmd, find_command, given_ids, guard,
-    strip_replay_only,
+    strip_replay_only, waits_for_tool_edit,
 };
 
 impl Session {
@@ -39,6 +39,12 @@ impl Session {
     /// Execute a command by id. This is THE entry point for every frontend.
     pub fn execute(&mut self, id: &str, params: &Value) -> Result<Value> {
         let spec = find_command(id).ok_or_else(|| cmd::params::unknown_command(id))?;
+        // An edit the active tool is computing on another thread (a Shape Builder merge) is
+        // applied before a command that may edit, select, save or give a document a new revision,
+        // as the click came first. Queries that only read do not wait for it.
+        if self.depth == 0 && waits_for_tool_edit(id) {
+            self.finish_tool_edit_later()?;
+        }
         let outer = std::mem::replace(&mut self.reading, !spec.journal || JOURNALED_READS.contains(&id));
         let r = self.execute_spec(spec, id, params);
         self.reading = outer;
@@ -76,9 +82,13 @@ impl Session {
             cmd::ids_param(params, "ids", id)?;
         }
         // Clear's menu needs a selection; an agent supplying explicit targets only needs a
-        // document. The command validates those targets before making any edit.
+        // document. The command validates those targets before making any edit. Cut and Copy given
+        // the artboards the journal recorded need only a document too, whatever is selected and
+        // whichever tool is chosen.
         let given = given_ids(spec.params, params);
-        let enabled = if id == "edit.clear" && params.get("ids").is_some() {
+        let enabled = if (id == "edit.clear" && params.get("ids").is_some())
+            || (matches!(id, "edit.copy" | "edit.cut") && params.get("selectedArtboards").is_some())
+        {
             cmd::has_doc(self)
         } else if let Some(ids) = given.clone() {
             // Objects given as `ids` (or `id`) stand in for the selection: the command is enabled
@@ -109,11 +119,14 @@ impl Session {
             })
             .flatten();
         let selected_before = select_first.as_ref().and(self.active()).map(|d| (d.uid, d.selection.clone(), d.active_layer));
+        // Only a selection command that changes the selection loads its paints for new art: other
+        // commands, and clicking what is already selected, keep a sampled paint in the proxies.
+        let selection_was = (id.starts_with("select.") || id == "layer.target").then(|| self.active().map(|d| d.selection.clone())).flatten();
         let run = |s: &mut Session| {
             if let Some(ids) = &select_first {
                 s.execute("select.set", &serde_json::json!({ "ids": ids }))?;
             }
-            let r = (spec.run)(s, params);
+            let r = cmd::run_spec(s, spec, params);
             if r.is_err()
                 && let Some((uid, selection, layer)) = selected_before
                 && let Some(st) = s.docs.iter_mut().find(|d| d.uid == uid)
@@ -131,6 +144,9 @@ impl Session {
         let r = if self.depth == 0 { self.run_guarded(id, run) } else { self.run_nested(run) };
         if r.is_err() && self.depth == 0 {
             self.batch_paint_docs.clear();
+            // A failed or panicked command's documents are put back: type is drawn in their
+            // composite fonts again, not in those the command set.
+            cmd::compositefonts::sync(self);
         }
         let r = r?;
         if self.depth == 0 {
@@ -143,6 +159,9 @@ impl Session {
             });
             if !restored {
                 self.inherit_new_art();
+                if selection_was.is_some_and(|was| self.active().is_some_and(|d| d.selection != was)) {
+                    self.load_selection_paints();
+                }
             }
             for uid in std::mem::take(&mut self.batch_paint_docs) {
                 if let Some(st) = self.docs.iter_mut().find(|d| d.uid == uid)
