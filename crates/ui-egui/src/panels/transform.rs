@@ -223,7 +223,7 @@ pub(crate) fn selected_guides(app: &VectorcraftApp) -> Option<(Option<f64>, Opti
         return None;
     }
     let least = |vertical: bool| {
-        st.selection.guides.iter().filter_map(|i| st.doc.guides.get(*i)).filter(|g| g.vertical == vertical).map(|g| g.pos).min_by(f64::total_cmp)
+        st.selection.guides.iter().filter_map(|i| st.doc.ruler_guide(*i)).filter(|g| g.vertical == vertical).map(|g| g.pos).min_by(f64::total_cmp)
     };
     Some((least(true), least(false)))
 }
@@ -575,6 +575,11 @@ pub fn menu(app: &mut VectorcraftApp, ui: &mut Ui) {
     let ss = app.session.prefs.scale_strokes;
     if menu_item(ui, tl!("Scale Strokes & Effects"), true, ss) {
         set_pref(app, "scaleStrokes", !ss);
+    }
+    // The panel's values and the bounding box measure point type by its glyphs' ink.
+    let glyphs = app.session.prefs.type_glyph_bounds;
+    if menu_item(ui, tl!("Measure Type by Glyph Bounds"), true, glyphs) {
+        set_pref(app, "typeGlyphBounds", !glyphs);
     }
     ui.separator();
     // What the panel transforms (Transform Object Only / Pattern Only / Both), one checked.

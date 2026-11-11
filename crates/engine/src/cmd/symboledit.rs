@@ -140,7 +140,7 @@ pub(crate) fn enter(s: &mut Session, p: &Value) -> Result<Value> {
     }
     s.end_text_edit();
     let st = s.doc()?;
-    let back = Return { redo: st.history.redo.clone(), before: Some(st.doc.clone()) };
+    let back = Return { redo: Arc::new(st.history.redo.clone()), before: Some(st.doc.clone()) };
     let (isolation, active_layer) = (st.isolation, st.active_layer);
     let layer = s.edit(ENTER, |d, sel| {
         let layer = begin(d, sel, &name, xf, instance)?;
@@ -229,7 +229,7 @@ pub(crate) fn leave(s: &mut Session, _: &Value) -> Result<Value> {
         }
         st.selection = Arc::unwrap_or_clone(entry.selection);
         st.selection.prune(&st.doc);
-        st.history.redo = redo;
+        st.history.redo = Arc::unwrap_or_clone(redo);
         st.revision += 1;
     } else {
         s.edit("Exit Symbol Editing Mode", |d, sel| {
@@ -248,7 +248,7 @@ pub(crate) fn leave(s: &mut Session, _: &Value) -> Result<Value> {
 /// the instance editing was entered from. The symbol already holds the layer's art ([`sync`]).
 pub(crate) fn finish(d: &mut Document, sel: &mut Selection) {
     let Some(se) = d.symbol_edit.take() else { return };
-    let _ = d.remove(se.layer);
+    let _ = d.remove_edit_layer(se.layer);
     match se.instance.filter(|i| d.node(*i).is_some()) {
         Some(i) => sel.set([i]),
         None => sel.clear(),
@@ -257,9 +257,10 @@ pub(crate) fn finish(d: &mut Document, sel: &mut Selection) {
 
 /// The redo steps entering symbol editing mode cleared, which leaving without an edit gives back,
 /// and the document entering started from, which tells the entering step apart from any other.
+/// Copies of the document's state share the redo steps.
 #[derive(Clone, Debug, Default)]
 pub(crate) struct Return {
-    redo: Vec<crate::HistoryEntry>,
+    redo: Arc<Vec<crate::HistoryEntry>>,
     before: Option<Arc<Document>>,
 }
 
@@ -479,18 +480,24 @@ fn follow_objects(d: &mut Document, name: &str, old: (&[Arc<Node>], bool), new: 
 /// an instance of the symbol itself.
 pub(crate) fn sync(before: &Document, d: &mut Document) -> Result<()> {
     let Some(se) = d.symbol_edit.clone() else { return Ok(()) };
-    let art: Option<Vec<Arc<Node>>> = d.node(se.layer).and_then(|l| l.children().cloned());
+    // The layer's art: ruler guides on it are not part of the symbol.
+    let art_of = |d: &Document| -> Option<Vec<Arc<Node>>> {
+        d.node(se.layer).and_then(|l| l.children()).map(|ch| ch.iter().filter(|c| !c.is_ruler_guide()).cloned().collect())
+    };
+    let art = art_of(d);
     let (Some(art), Some(index)) = (art, d.symbols.iter().position(|x| x.name == se.symbol)) else {
         d.symbol_edit = None;
-        let _ = d.remove(se.layer);
+        let _ = d.remove_edit_layer(se.layer);
         return Ok(());
     };
     // Entering, and edits that left the layer's art alone, write nothing.
     let same = |b: &[Arc<Node>]| b.len() == art.len() && b.iter().zip(&art).all(|(a, b)| Arc::ptr_eq(a, b));
     let (old, old_group) = match before.symbol_edit.as_ref().filter(|b| b.layer == se.layer) {
         None => return Ok(()),
-        Some(_) if before.node(se.layer).and_then(|l| l.children()).is_some_and(|b| same(b)) => return Ok(()),
-        Some(b) => (before.node(se.layer).and_then(|l| l.children().cloned()).unwrap_or_default(), b.group),
+        Some(b) => match art_of(before) {
+            Some(old) if same(&old) => return Ok(()),
+            old => (old.unwrap_or_default(), b.group),
+        },
     };
     if art.iter().any(|n| holds_symbol(d, n, &se.symbol, &mut HashSet::new())) {
         return Err(EngineError::Other("a symbol can't hold an instance of itself".into()));

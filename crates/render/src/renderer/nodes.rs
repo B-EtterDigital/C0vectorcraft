@@ -5,6 +5,7 @@ use super::{
     shape_masked_image, single_plain_fill, text_geom_snapped, white_shape_mask,
 };
 use crate::kept_paths::{self, KeptPath};
+use crate::node_checks::{holds_measured_three_d, measures_three_d};
 
 impl Renderer {
     /// Cached cull bounds of a node (containers union their cached children), symbol instances
@@ -28,6 +29,24 @@ impl Renderer {
                     }
                 }
                 acc
+            }
+            // A 3D effect's art, measured as this renderer draws and keeps it ([`Self::fx_art`]): one
+            // build for the measure and the draw. Crop Marks and Vector Halftone draw other art, and
+            // an object whose 3D effect builds nothing (Revolve on a group, a solid too complex) is
+            // drawn otherwise, measured as below.
+            _ if measures_three_d(a)
+                && let Some(b) = {
+                    let art = self.measured_fx_art(symbols.document(), a);
+                    self.three_d_art_bounds(symbols, &art)
+                } =>
+            {
+                // Culling leaves room for brush art as for any object ([`brush_fx::cull_bounds`]);
+                // the measure is made again when the brush library changes ([`Self::check_symbols`]).
+                if self.brush_library.is_none() {
+                    self.brush_library = Some(self.brushes.library_key_now(symbols.document(), self.stamp));
+                }
+                let pad = brush_fx::pad(symbols, a);
+                b.map(|b| fx::with_own_raster_reach(symbols, a, b).inflate(pad, pad))
             }
             _ => self.kept_bounds(symbols, a).unwrap_or_else(|| brush_fx::cull_bounds(symbols, a)),
         };
@@ -81,13 +100,22 @@ impl Renderer {
 
     /// Drop the cached bounds of symbol instances and of the objects that hold them when `doc`'s
     /// symbols are not those of the document last drawn (by name and art): those bounds measured
-    /// the instances by their symbol's art.
+    /// the instances by their symbol's art. Likewise drop those of objects measured by a 3D
+    /// effect's art, and of the objects that hold them, when the brush library has changed.
     pub(crate) fn check_symbols(&mut self, doc: &Document) {
         let same = self.symbols.len() == doc.symbols.len()
             && self.symbols.iter().zip(&doc.symbols).all(|((name, art), s)| *name == s.name && std::ptr::eq(art.as_ptr(), Arc::as_ptr(&s.art)));
         if !same {
             self.geom.retain(|_, e| !holds_instance(&e.node));
             self.symbols = doc.symbols.iter().map(|s| (s.name.clone(), Arc::downgrade(&s.art))).collect();
+        }
+        // That art is measured with the art its brushed strokes draw ([`Self::bounds_of`]). Without
+        // such bounds, nothing is checked.
+        if let Some(was) = self.brush_library
+            && self.brushes.library_key_now(doc, self.stamp) != was
+        {
+            self.geom.retain(|_, e| !holds_measured_three_d(&e.node));
+            self.brush_library = None;
         }
     }
 
@@ -188,19 +216,10 @@ impl Renderer {
         self.path_of(f.symbols, &owner)
     }
 
-    /// Symbol editing mode on screen: `id` is the instance editing was entered from, which is not
-    /// drawn (with its masks and effects), since the editing layer holds a copy of its art in its
-    /// place.
-    fn edited_instance(f: &Frame, id: NodeId) -> bool {
-        f.opts.isolated.is_some() && f.doc.symbol_edit.as_ref().is_some_and(|e| e.instance == Some(id))
-    }
-
     /// Whether `a` is left out of this frame: hidden, a skipped template or guide, the instance a
     /// symbol is edited from, or culled.
     fn skipped(&mut self, f: &Frame, a: &Arc<Node>) -> bool {
-        let skipped_view_item = (f.opts.skip_templates || f.opts.hide_templates) && matches!(a.kind, NodeKind::Layer { template: true, .. })
-            || (f.opts.skip_templates || f.opts.hide_guides) && matches!(a.kind, NodeKind::Path { guide: true, .. });
-        if !a.visible || skipped_view_item || f.opts.hidden.contains(&a.id) || Self::edited_instance(f, a.id) {
+        if crate::node_checks::left_out(f.opts, f.doc, a) {
             return true;
         }
         match self.bounds_of(f.symbols, a) {
@@ -577,6 +596,8 @@ impl Renderer {
                 Some(a) => self.draw_live_body(ctx, f, &a, true),
                 None => self.draw_live_node(ctx, f, n),
             },
+            // The canvas draws ruler guides over the art; the renderer draws nothing for them.
+            NodeKind::RulerGuide { .. } => {}
         }
     }
 
@@ -635,11 +656,8 @@ impl Renderer {
     /// `fx_owner`, so its path, its live-effect geometry and, through [`Self::draw_kept_node`], a
     /// live object's evaluation come from the caches.
     fn draw_outline_member(&mut self, ctx: &mut RenderContext, f: &Frame, c: &Arc<Node>) {
-        if !c.visible
-            || f.opts.hidden.contains(&c.id)
-            || f.opts.hide_guides && matches!(c.kind, NodeKind::Path { guide: true, .. })
-            || Self::edited_instance(f, c.id)
-        {
+        // Left out as any object is ([`Self::skipped`]).
+        if crate::node_checks::left_out(f.opts, f.doc, c) {
             return;
         }
         match self.bounds_of(f.symbols, c) {
@@ -664,18 +682,20 @@ impl Renderer {
             self.draw_knockout(ctx, f, children);
         } else if let Some((_, path)) = self.isolation_path(f) {
             // Isolation mode, in a container on the way down to the isolated one: each run of
-            // members around it draws dimmed as one (#833).
+            // members around it draws dimmed as one (#833). A run of ruler guides alone draws
+            // nothing, so it gets no dimmed pass.
+            let draws = |run: &[Arc<Node>]| run.iter().any(|c| !c.is_ruler_guide());
             let mut rest = children;
             while let Some(i) = rest.iter().position(|c| path.contains(&c.id)) {
                 let (around, from) = rest.split_at(i);
-                if !around.is_empty() {
+                if draws(around) {
                     self.dimmed(ctx, f, &mut |r, c, fr| around.iter().for_each(|n| r.draw_arc(c, fr, n)));
                 }
                 let Some((on_path, after)) = from.split_first() else { break };
                 self.draw_arc(ctx, f, on_path);
                 rest = after;
             }
-            if !rest.is_empty() {
+            if draws(rest) {
                 self.dimmed(ctx, f, &mut |r, c, fr| rest.iter().for_each(|n| r.draw_arc(c, fr, n)));
             }
         } else {

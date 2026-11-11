@@ -594,7 +594,7 @@ fn a_groups_transform_moves_the_gradients_placed_on_an_images_own_fills() {
     };
     for kind in [image as fn() -> NodeKind, instance] {
         assert_eq!(starts(kind(), serde_json::json!({"moveH": 30})), [30.0], "{:?}", kind());
-        assert_eq!(starts(kind(), serde_json::json!({"moveH": 30, "copies": 2})), [0.0, 30.0, 60.0], "{:?}", kind());
+        assert_eq!(starts(kind(), serde_json::json!({"moveH": 30, "copies": 2})), [60.0, 30.0, 0.0], "{:?}", kind());
     }
 }
 
@@ -677,7 +677,8 @@ fn a_transform_on_a_group_paints_each_copy_with_its_own_gradient() {
         let art = evaluate_container(None, &g).unwrap();
         let copies = art.children().unwrap()[0].children().expect("the object and its copies are objects of their own");
         assert_eq!(copies.len(), 3);
-        for (i, c) in copies.iter().enumerate() {
+        // The original is on top, after the copies below it.
+        for (i, c) in copies.iter().rev().enumerate() {
             // Each copy's own box: an unplaced gradient fits it, a placed one moved with it.
             assert!((c.geometric_bounds().unwrap().x0 - 30.0 * i as f64).abs() < 1e-6);
             match c.appearance.fill_paint() {
@@ -818,4 +819,46 @@ fn nested_compound_shapes_take_part_as_their_area() {
     assert_eq!(out.len(), 1);
     assert!((area(&out[0]) - 50.0).abs() < 0.01);
     assert_eq!(out[0].appearance.fill_paint().color(), Some(Color::rgb(0.0, 1.0, 0.0)), "styled like the compound shape");
+}
+
+/// The ruler guides of a layer with a Pathfinder effect, a Transform effect that copies its art, or
+/// fills and strokes of its own take no part: they stay last in the layer, once and unchanged.
+#[test]
+fn a_layers_ruler_guides_stay_last_through_its_effects() {
+    use vectorcraft_doc::LayerColor;
+    let guide = |id, pos| Arc::new(Node::new(NodeId(id), NodeKind::RulerGuide { vertical: true, pos, artboard: None }));
+    let layer = |effect: &str, params: serde_json::Value| {
+        let mut l = Node::layer(NodeId(10), "Layer 1", LayerColor::Preset(0));
+        if let Some(ch) = l.children_mut() {
+            *ch = vec![sq(1, 0.0, Color::rgb(1.0, 0.0, 0.0)), sq(2, 5.0, Color::rgb(0.0, 0.0, 1.0)), guide(20, 3.0), guide(21, 8.0)];
+        }
+        l.appearance.effects.push(Effect { id: effect.into(), params, visible: true });
+        l
+    };
+    let tail = |n: &Node| {
+        let ch = n.children().unwrap();
+        assert_eq!(ch.iter().filter(|c| c.is_ruler_guide()).count(), 2, "each guide once");
+        ch.iter().rev().take(2).map(|c| c.kind.clone()).collect::<Vec<_>>()
+    };
+    let guides = vec![guide(21, 8.0).kind.clone(), guide(20, 3.0).kind.clone()];
+
+    let add = layer("pathfinder.add", serde_json::json!({}));
+    let out = pathfinder_children(None, &add, None).unwrap();
+    assert_eq!(out.len(), 3, "the united area, then the two guides");
+    assert!((area(&out[0]) - 150.0).abs() < 0.01);
+    assert!(out[1].is_ruler_guide() && out[2].is_ruler_guide());
+    assert_eq!(tail(&evaluate_container(None, &add).unwrap()), guides);
+
+    let copies = layer("distort.transform", serde_json::json!({"moveH": 30, "copies": 2}));
+    let art = evaluate_container(None, &copies).unwrap();
+    assert_eq!(tail(&art), guides);
+    assert_eq!(art.children().unwrap().len(), 5, "three groups of the art, then the two guides");
+    let mut art = copies.clone();
+    crate::reshape::reshape_leaves(&mut art, &copies.appearance.effects.iter().collect::<Vec<_>>(), &copies.appearance.effects, None);
+    assert_eq!(tail(&art), guides);
+    assert_eq!(art.children().unwrap().len(), 5, "reshaped as members too");
+
+    let mut painted = layer("distort.transform", serde_json::json!({"moveH": 30}));
+    painted.appearance.items = Appearance::basic(Paint::solid(Color::BLACK), Paint::None, 0.0).items;
+    assert_eq!(tail(&evaluate_container(None, &painted).unwrap()), guides);
 }
