@@ -1244,9 +1244,9 @@ impl<'a> Reader<'a> {
                     None => None,
                 };
                 let pos = if vertical { p.x } else { p.y };
-                pos.is_finite().then_some(Guide { vertical, pos, artboard, layer: None })
+                pos.is_finite().then_some(Guide { artboard, ..Guide::new(vertical, pos) })
             };
-            take_ruler_guides(&mut doc.layers, &pick, &mut doc.guides, 0);
+            take_ruler_guides(&mut doc.layers, &pick, 0);
         }
         let mut brushes = self.brush_library();
         if let Some((lib, _)) = &brushes {
@@ -1335,6 +1335,17 @@ impl<'a> Reader<'a> {
             doc.limit_depth_noting(&mut warnings);
         }
         warnings.extend(self.names.notes());
+        // The patterns of the styles that are one paint, which the text document's characters
+        // name for their fills and strokes: those that place in the document.
+        let text_patterns = self
+            .styles
+            .iter()
+            .filter_map(|(style, st)| {
+                let Some(crate::import::ai::style::StyleItem::Pattern { name, matrix, controls }) = &st.simple_pattern else { return None };
+                let paint = super::ops::style_pattern(name, *matrix, controls, &self.pattern_tiles, &self.v7_patterns, &self.global_names, to_doc)?;
+                Some((style.clone(), paint))
+            })
+            .collect();
         Ok(Structure {
             doc,
             to_doc,
@@ -1356,8 +1367,10 @@ impl<'a> Reader<'a> {
                 checks: self.envelope_checks,
                 spent: self.envelope_spent,
                 page,
+                alone: None,
             },
             styles_read,
+            text_patterns,
             canvas_scale: self.canvas_scale,
             xml_ids: self.xml_ids,
             bindings,
@@ -1429,9 +1442,9 @@ fn ruler_guide(a: Point, b: Point, centre: Option<(f64, f64)>, boards: &[Rect]) 
     }
 }
 
-/// Moves the children of the layers and sublayers of `nodes` that `pick` makes a guide of into
-/// `guides`, each on its layer.
-fn take_ruler_guides(nodes: &mut [Arc<Node>], pick: &dyn Fn(NodeId) -> Option<Guide>, guides: &mut Vec<Guide>, depth: usize) {
+/// Makes the children of the layers and sublayers of `nodes` that `pick` makes a guide of into
+/// ruler guide nodes with the same ids, moved to the top of their layer in their order.
+fn take_ruler_guides(nodes: &mut [Arc<Node>], pick: &dyn Fn(NodeId) -> Option<Guide>, depth: usize) {
     if depth > MAX_DEPTH {
         return;
     }
@@ -1439,16 +1452,17 @@ fn take_ruler_guides(nodes: &mut [Arc<Node>], pick: &dyn Fn(NodeId) -> Option<Gu
         if !matches!(n.kind, NodeKind::Layer { .. }) {
             continue;
         }
-        let id = n.id;
         let Some(kids) = Arc::make_mut(n).children_mut() else { continue };
+        let mut guides = vec![];
         kids.retain(|k| match pick(k.id) {
             Some(g) => {
-                guides.push(Guide { layer: Some(id), ..g });
+                guides.push(Arc::new(Node::new(k.id, NodeKind::RulerGuide { vertical: g.vertical, pos: g.pos, artboard: g.artboard })));
                 false
             }
             None => true,
         });
-        take_ruler_guides(kids, pick, guides, depth + 1);
+        take_ruler_guides(kids, pick, depth + 1);
+        kids.extend(guides);
     }
 }
 
