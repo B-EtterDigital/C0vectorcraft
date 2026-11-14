@@ -55,12 +55,14 @@ mod pixels;
 pub use pixels::{GraySource, MAX_RASTER_ALLOC, PixelPick};
 pub mod placed_document;
 pub mod plugin_data;
+pub mod ppi;
 pub mod profiles;
 pub mod puppet;
 pub mod range;
 pub mod rastersettings;
 mod reach;
 pub mod recolor;
+pub mod resample;
 pub mod selection;
 pub mod separated;
 pub mod setup;
@@ -92,8 +94,8 @@ pub use compound_shape::ShapeMode;
 pub use corners::LiveCorners;
 pub use depth::{MAX_DEPTH, MAX_SYMBOL_NODES};
 pub use graph::{
-    ColumnDesign, ColumnType, Fractions, GraphDesign, GraphKind, GraphSpec, LabelStyles, MAX_GRAPH_CATEGORIES, MAX_GRAPH_SERIES, PiePosition,
-    PieSort, SeriesPaint, TickLength, ValueAxisSide,
+    ColumnDesign, ColumnType, Fractions, GraphDesign, GraphKind, GraphSpec, LabelRows, LabelStyles, MAX_GRAPH_CATEGORIES, MAX_GRAPH_SERIES,
+    PiePosition, PieSort, SeriesPaint, TickLength, ValueAxisSide,
 };
 pub use hit::{Hit, HitKind};
 pub use links::{LinkInfo, PlacementOptions};
@@ -367,6 +369,12 @@ pub struct Document {
     /// saved.
     #[serde(skip)]
     inline_cycles: inline::InlineCycles,
+    /// Art kept elsewhere in the document's data (the art of the stored brushes, which
+    /// `vectorcraft-brush` reads from [`Self::unknown`]) while it is set here, each root with the
+    /// `owner` the Links panel names for it, so the stored-art lookups ([`StoredRoot::Mounted`])
+    /// find its objects too. Empty otherwise; never saved.
+    #[serde(skip)]
+    pub mounted_art: Vec<(Arc<Node>, serde_json::Value)>,
 }
 
 fn ppi72() -> f64 {
