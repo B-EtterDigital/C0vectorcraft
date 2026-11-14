@@ -28,11 +28,13 @@ fn texts(shapes: &[egui::epaint::ClippedShape]) -> String {
     }
     out
 }
+/// Tall enough for the whole Home column: upstream added a Learn section above the community links (2026-11-13),
+/// which a 900 px screen no longer reaches, so the links were never drawn.
 fn render(app: &mut VectorcraftApp, ctx: &egui::Context) -> String {
     let mut out = String::new();
     for _ in 0..3 {
         let mut frame = ctx.run_ui(
-            egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 900.0))), ..Default::default() },
+            egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1200.0, 2400.0))), ..Default::default() },
             |ui| {
                 app.logic(ui.ctx());
                 app.ui(ui);
