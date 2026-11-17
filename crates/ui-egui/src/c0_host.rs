@@ -68,6 +68,11 @@ pub fn tick(app: &mut VectorcraftApp) {
     c0_files::tick(app);
 }
 
+/// Whether the command palette may list `id`: the host hides promotional commands from search too.
+pub fn palette_allows(app: &VectorcraftApp, id: &str) -> bool {
+    allow(app, id).is_ok()
+}
+
 pub fn palette_match(app: &VectorcraftApp, id: &str, haystack: &str, query: &str) -> bool {
     allow(app, id).is_ok() && query.split_whitespace().all(|word| haystack.contains(word))
 }
