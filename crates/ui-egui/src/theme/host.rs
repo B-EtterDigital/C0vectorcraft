@@ -82,6 +82,7 @@ colors!(
     artboard_mark,
     error,
     warning,
+    success,
     axis_x,
     axis_y,
     axis_z
